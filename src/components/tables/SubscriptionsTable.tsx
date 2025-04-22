@@ -20,15 +20,14 @@ import {
   InputLabel,
   Grid,
   Divider,
-  Tooltip,
-  useTheme
+  useTheme,
+  SelectChangeEvent
 } from '@mui/material';
 import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon,
   LocalOffer as LocalOfferIcon,
-  CalendarToday as CalendarTodayIcon,
-  AttachMoney as AttachMoneyIcon
+  CalendarToday as CalendarTodayIcon
 } from '@mui/icons-material';
 
 // Tipos para las suscripciones
@@ -56,8 +55,12 @@ interface Subscription {
   installments: Installment[];
 }
 
+interface RowProps {
+  row: Subscription;
+}
+
 // Componente para una fila expandible
-function Row({ row }: { row: Subscription }) {
+function Row({ row }: RowProps) {
   const [open, setOpen] = useState(false);
   const theme = useTheme();
 
@@ -222,7 +225,7 @@ function Row({ row }: { row: Subscription }) {
                 </TableHead>
                 <TableBody>
                   {row.installments.map((installment) => (
-                    <TableRow key={installment.id}>
+                    <TableRow key={`installment-${installment.id}`}>
                       <TableCell component="th" scope="row">
                         {installment.id}
                       </TableCell>
@@ -251,13 +254,21 @@ function Row({ row }: { row: Subscription }) {
   );
 }
 
+// Interfaz para los filtros
+interface FilterState {
+  email: string;
+  status: string;
+  project: string;
+  overdueRange: string;
+}
+
 export default function SubscriptionsTable() {
   // Estado para paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Estado para filtros
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<FilterState>({
     email: '',
     status: '',
     project: '',
@@ -375,7 +386,7 @@ export default function SubscriptionsTable() {
   });
 
   // Manejar cambio de página
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
@@ -385,12 +396,20 @@ export default function SubscriptionsTable() {
     setPage(0);
   };
 
-  // Manejar cambios en los filtros
-  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
-    const { name, value } = event.target;
+  // Manejar cambios en los filtros de texto
+  const handleTextFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilters({
       ...filters,
-      [name as string]: value as string
+      [event.target.name]: event.target.value
+    });
+    setPage(0); // Regresar a la primera página después de aplicar un filtro
+  };
+
+  // Manejar cambios en los filtros de selección
+  const handleSelectFilterChange = (event: SelectChangeEvent<string>) => {
+    setFilters({
+      ...filters,
+      [event.target.name as string]: event.target.value
     });
     setPage(0); // Regresar a la primera página después de aplicar un filtro
   };
@@ -404,18 +423,18 @@ export default function SubscriptionsTable() {
         </Typography>
         <Divider sx={{ mb: 2 }} />
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField
               label="Email"
               name="email"
               value={filters.email}
-              onChange={handleFilterChange}
+              onChange={handleTextFilterChange}
               variant="outlined"
               fullWidth
               size="small"
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <FormControl fullWidth size="small">
               <InputLabel id="status-filter-label">Estado</InputLabel>
               <Select
@@ -423,7 +442,7 @@ export default function SubscriptionsTable() {
                 name="status"
                 value={filters.status}
                 label="Estado"
-                onChange={handleFilterChange}
+                onChange={handleSelectFilterChange}
               >
                 <MenuItem value="">Todos</MenuItem>
                 <MenuItem value="active">Activa</MenuItem>
@@ -433,18 +452,18 @@ export default function SubscriptionsTable() {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField
               label="Proyecto"
               name="project"
               value={filters.project}
-              onChange={handleFilterChange}
+              onChange={handleTextFilterChange}
               variant="outlined"
               fullWidth
               size="small"
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <FormControl fullWidth size="small">
               <InputLabel id="overdue-range-filter-label">Rango de Mora</InputLabel>
               <Select
@@ -452,7 +471,7 @@ export default function SubscriptionsTable() {
                 name="overdueRange"
                 value={filters.overdueRange}
                 label="Rango de Mora"
-                onChange={handleFilterChange}
+                onChange={handleSelectFilterChange}
               >
                 <MenuItem value="">Todos</MenuItem>
                 <MenuItem value="0">Sin mora</MenuItem>
@@ -488,7 +507,7 @@ export default function SubscriptionsTable() {
                 ? filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 : filteredRows
               ).map((row) => (
-                <Row key={row.id} row={row} />
+                <Row key={`subscription-row-${row.id}`} row={row} />
               ))}
             </TableBody>
           </Table>

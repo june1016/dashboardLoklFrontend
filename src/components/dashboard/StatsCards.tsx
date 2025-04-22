@@ -8,10 +8,21 @@ import {
   ArrowDownward as ArrowDownIcon
 } from '@mui/icons-material';
 
+interface StatCardProps {
+  title: string;
+  value: string;
+  change: string;
+  trend: 'up' | 'down';
+  icon: React.ElementType;
+  color: string;
+  gradientFrom: string;
+  gradientTo: string;
+}
+
 export default function StatsCards() {
   const theme = useTheme();
 
-  const stats = [
+  const stats: StatCardProps[] = [
     {
       title: 'Total Revenue',
       value: '$45,231.89',
@@ -57,7 +68,7 @@ export default function StatsCards() {
   return (
     <Grid container spacing={3}>
       {stats.map((stat, index) => (
-        <Grid item xs={12} sm={6} md={3} key={index}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={`stat-card-${index}`}>
           <Card
             sx={{
               borderRadius: 2,

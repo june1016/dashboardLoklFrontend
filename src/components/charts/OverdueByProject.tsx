@@ -33,8 +33,8 @@ export default function OverdueByProject() {
     ];
     
     // Ordenar de mayor a menor
-    data.sort((a, b) => b.amount - a.amount);
-    setChartData(data);
+    const sortedData = [...data].sort((a, b) => b.amount - a.amount);
+    setChartData(sortedData);
   }, []);
 
   // Función para formatear montos en el tooltip

@@ -9,9 +9,14 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+interface ChartData {
+  name: string;
+  value: number;
+}
+
 export default function SubscriptionChart() {
   const theme = useTheme();
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<ChartData[]>([]);
 
   useEffect(() => {
     // Datos de ejemplo (estos se reemplazarán con datos reales de la API)
@@ -39,7 +44,7 @@ export default function SubscriptionChart() {
     midAngle,
     innerRadius,
     outerRadius,
-    percent,
+    percent
   }: any) => {
     if (percent < 0.05) return null;
     
@@ -65,6 +70,9 @@ export default function SubscriptionChart() {
   // Componente personalizado para el tooltip
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+      const total = chartData.reduce((sum, entry) => sum + entry.value, 0);
+      const percentage = ((payload[0].value / total) * 100).toFixed(1);
+      
       return (
         <Box
           sx={{
@@ -81,7 +89,7 @@ export default function SubscriptionChart() {
           <Box>
             <span style={{ fontWeight: 600 }}>{payload[0].value}</span>
             <span style={{ color: theme.palette.text.secondary, marginLeft: 4 }}>
-              ({((payload[0].value / chartData.reduce((a, b) => a + b.value, 0)) * 100).toFixed(1)}%)
+              ({percentage}%)
             </span>
           </Box>
         </Box>
@@ -106,7 +114,10 @@ export default function SubscriptionChart() {
             label={renderCustomizedLabel}
           >
             {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell 
+                key={`cell-${index}`} 
+                fill={COLORS[index % COLORS.length]} 
+              />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />

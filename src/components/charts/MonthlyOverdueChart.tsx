@@ -60,7 +60,7 @@ export default function MonthlyOverdueChart() {
 
   // Cambiar tipo de gráfico
   const handleChartTypeChange = (
-    event: React.MouseEvent<HTMLElement>,
+    _event: React.MouseEvent<HTMLElement>,
     newType: 'monthly' | 'accumulated',
   ) => {
     if (newType !== null) {

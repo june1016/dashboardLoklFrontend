@@ -71,7 +71,6 @@ export default function SubscriptionStatusChart() {
     midAngle,
     innerRadius,
     outerRadius,
-    percent,
     value,
   }: any) => {
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;

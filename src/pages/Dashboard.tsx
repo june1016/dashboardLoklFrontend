@@ -20,7 +20,8 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import StatsCards from '../components/dashboard/StatsCards';
 import ExpectedVsActualChart from '../components/charts/ExpectedVsActualChart';
 import MonthlyOverdueChart from '../components/charts/MonthlyOverdueChart';
-import OverdueByProject from '../components/charts/OverviewChart';
+import OverdueByProject from '../components/charts/OverdueByProject';
+import SubscriptionStatusChart from '../components/charts/SubscriptionStatusChart';
 import SubscriptionsTable from '../components/tables/SubscriptionsTable';
 
 // Componente para manejar las pestañas del dashboard
@@ -50,12 +51,12 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-export default function LoklDashboard() {
+export default function Dashboard() {
   const theme = useTheme();
   const [tabValue, setTabValue] = useState(0);
 
   // Función para cambiar de pestaña
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -139,7 +140,7 @@ export default function LoklDashboard() {
         {/* Pestaña 1: Visión General */}
         <TabPanel value={tabValue} index={0}>
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Card>
                 <CardHeader
                   title="Dinero Esperado vs. Real (Mensual)"
@@ -158,7 +159,7 @@ export default function LoklDashboard() {
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card sx={{ height: '100%' }}>
                 <CardHeader
                   title="Suscripciones Activas y Próximas a Finalizar"
@@ -172,17 +173,12 @@ export default function LoklDashboard() {
                   }}
                 />
                 <CardContent>
-                  {/* Este componente será implementado en la siguiente fase */}
-                  <Box sx={{ height: 250, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Typography variant="h6" color="text.secondary">
-                      Componente en desarrollo...
-                    </Typography>
-                  </Box>
+                  <SubscriptionStatusChart />
                 </CardContent>
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card sx={{ height: '100%' }}>
                 <CardHeader
                   title="Mora por Proyecto"
@@ -206,7 +202,7 @@ export default function LoklDashboard() {
         {/* Pestaña 2: Mora y Pagos */}
         <TabPanel value={tabValue} index={1}>
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Card>
                 <CardHeader
                   title="Mora Mensual y Acumulada"
@@ -225,7 +221,7 @@ export default function LoklDashboard() {
               </Card>
             </Grid>
             
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Card>
                 <CardHeader
                   title="Mora por Proyecto"
