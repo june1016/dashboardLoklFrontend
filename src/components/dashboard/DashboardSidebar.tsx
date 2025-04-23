@@ -7,10 +7,9 @@ import {
   ListItemText, 
   IconButton, 
   Typography, 
-  Avatar,
   useTheme
 } from '@mui/material';
-import { alpha } from '@mui/material/styles'; // Added the import for alpha
+import { alpha } from '@mui/material/styles';
 import {
   Home as HomeIcon,
   BarChart as BarChartIcon,
@@ -19,10 +18,10 @@ import {
   CreditCard as CreditCardIcon,
   Settings as SettingsIcon,
   ChevronLeft as ChevronLeftIcon,
-  GroupWork as GroupWorkIcon,
-  Menu as MenuIcon
+  ChevronRight as ChevronRightIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
+import { memo, useEffect } from 'react';
 
 interface DashboardSidebarProps {
   collapsed: boolean;
@@ -36,16 +35,26 @@ interface MenuItem {
   active: boolean;
 }
 
-export default function DashboardSidebar({ collapsed, onToggleCollapse }: DashboardSidebarProps) {
+function DashboardSidebar({ collapsed, onToggleCollapse }: DashboardSidebarProps) {
   const theme = useTheme();
 
+  // Usar useEffect para aplicar una clase CSS para animaciones más suaves
+  useEffect(() => {
+    // Añadir una clase al body para manejar transiciones CSS más fluidas
+    document.body.classList.toggle('sidebar-transition', true);
+    
+    return () => {
+      document.body.classList.toggle('sidebar-transition', false);
+    };
+  }, []);
+
   const menuItems: MenuItem[] = [
-    { text: 'Dashboard', icon: HomeIcon, path: '/', active: true },
-    { text: 'Analytics', icon: BarChartIcon, path: '/analytics', active: false },
-    { text: 'Orders', icon: ShoppingCartIcon, path: '/orders', active: false },
-    { text: 'Customers', icon: PeopleIcon, path: '/customers', active: false },
-    { text: 'Billing', icon: CreditCardIcon, path: '/billing', active: false },
-    { text: 'Settings', icon: SettingsIcon, path: '/settings', active: false },
+    { text: 'Panel Principal', icon: HomeIcon, path: '/', active: true },
+    { text: 'Analítica', icon: BarChartIcon, path: '/analytics', active: false },
+    { text: 'Suscripciones', icon: ShoppingCartIcon, path: '/orders', active: false },
+    { text: 'Clientes', icon: PeopleIcon, path: '/customers', active: false },
+    { text: 'Facturación', icon: CreditCardIcon, path: '/billing', active: false },
+    { text: 'Configuración', icon: SettingsIcon, path: '/settings', active: false },
   ];
 
   return (
@@ -57,9 +66,14 @@ export default function DashboardSidebar({ collapsed, onToggleCollapse }: Dashbo
         borderColor: 'divider',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'width 0.3s ease',
-        width: collapsed ? 72 : 240,
-        overflowX: 'hidden'
+        // Usar transitionProperty específico para mayor optimización
+        transition: theme.transitions.create(['width'], {
+          easing: theme.transitions.easing.easeOut, // Usa easeOut para una sensación más natural
+          duration: 120, // Reducir la duración aún más para que se sienta más rápida
+        }),
+        width: collapsed ? 72 : 240, // Reducir el ancho cuando está colapsado para mejor diseño
+        overflowX: 'hidden',
+        position: 'relative', // Necesario para posicionar absolutamente el botón
       }}
     >
       {/* Header */}
@@ -67,60 +81,43 @@ export default function DashboardSidebar({ collapsed, onToggleCollapse }: Dashbo
         sx={{ 
           display: 'flex', 
           alignItems: 'center', 
-          justifyContent: collapsed ? 'center' : 'space-between',
           p: 2,
           borderBottom: 1,
           borderColor: 'divider',
-          minHeight: 64
+          minHeight: 64,
+          justifyContent: collapsed ? 'center' : 'space-between',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Avatar
-            sx={{
-              bgcolor: 'primary.main',
-              width: 40,
-              height: 40
-            }}
-          >
-            <GroupWorkIcon sx={{ color: 'white' }} />
-          </Avatar>
-          
-          {!collapsed && (
-            <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-              LOKL
-            </Typography>
-          )}
-        </Box>
+        {/* Logo - solo visible cuando está expandido */}
+        {!collapsed && (
+          <img 
+            src="/src/assets/Logo.png" 
+            alt="LOKL Logo" 
+            style={{ 
+              height: 40, 
+              maxWidth: 120,
+              objectFit: 'contain' 
+            }} 
+          />
+        )}
 
+        {/* Botón de toggle - ajustado para ambos estados */}
         <IconButton 
           onClick={onToggleCollapse}
-          sx={{ display: collapsed ? 'none' : 'flex' }}
+          size="small"
+          sx={{
+            bgcolor: alpha(theme.palette.primary.main, 0.05),
+            '&:hover': {
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+            },
+            // Centrar el botón cuando está colapsado
+            ...(collapsed && {
+              mx: 'auto',
+            })
+          }}
         >
-          <ChevronLeftIcon />
+          {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
         </IconButton>
-
-        {collapsed && (
-          <IconButton 
-            onClick={onToggleCollapse}
-            sx={{ 
-              position: 'absolute', 
-              top: 72, 
-              left: '50%', 
-              transform: 'translateX(-50%)',
-              bgcolor: 'background.paper',
-              border: 1,
-              borderColor: 'divider',
-              boxShadow: 1,
-              width: 24,
-              height: 24,
-              '& .MuiSvgIcon-root': {
-                fontSize: 16
-              }
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-        )}
       </Box>
 
       {/* Navigation */}
@@ -135,7 +132,7 @@ export default function DashboardSidebar({ collapsed, onToggleCollapse }: Dashbo
                 justifyContent: collapsed ? 'center' : 'initial',
                 px: 2.5,
                 borderRadius: 1,
-                mx: 1,
+                mx: collapsed ? 0.5 : 1, // Ajuste del margen para mejorar apariencia colapsada
                 ...(item.active && {
                   bgcolor: alpha(theme.palette.primary.main, 0.1),
                   color: 'primary.main',
@@ -172,40 +169,31 @@ export default function DashboardSidebar({ collapsed, onToggleCollapse }: Dashbo
         ))}
       </List>
 
-      {/* Footer */}
-      <Box 
-        sx={{ 
-          p: 2, 
-          borderTop: 1, 
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-          justifyContent: collapsed ? 'center' : 'initial'
-        }}
-      >
-        <Avatar
-          sx={{
-            bgcolor: alpha(theme.palette.primary.main, 0.1),
-            color: 'primary.main',
-            width: 32,
-            height: 32
+      {/* Footer - solo mostrar cuando está expandido */}
+      {!collapsed && (
+        <Box 
+          sx={{ 
+            p: 2, 
+            borderTop: 1, 
+            borderColor: 'divider',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
           }}
         >
-          <PeopleIcon fontSize="small" />
-        </Avatar>
-        
-        {!collapsed && (
           <Box>
             <Typography variant="body2" fontWeight={500}>
               LOKL Pro
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              5 users
+              5 usuarios
             </Typography>
           </Box>
-        )}
-      </Box>
+        </Box>
+      )}
     </Box>
   );
 }
+
+// Utilizamos memo para evitar renderizados innecesarios
+export default memo(DashboardSidebar);

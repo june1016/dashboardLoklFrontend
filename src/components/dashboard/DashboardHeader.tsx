@@ -15,9 +15,9 @@ import {
   Notifications as NotificationsIcon,
   ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 
-export default function DashboardHeader() {
+function DashboardHeader() {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -64,10 +64,10 @@ export default function DashboardHeader() {
       >
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
           <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-            Dashboard
+            Panel de Control
           </Typography>
           <Typography variant="subtitle1" sx={{ color: alpha('#FFFFFF', 0.8), mt: 0.5 }}>
-            Welcome back, your business summary
+            Bienvenido, resumen de tu negocio
           </Typography>
         </Box>
 
@@ -84,7 +84,7 @@ export default function DashboardHeader() {
           >
             <SearchIcon sx={{ color: alpha('#FFFFFF', 0.7), mr: 1 }} />
             <InputBase
-              placeholder="Search..."
+              placeholder="Buscar..."
               sx={{ 
                 color: 'white',
                 '& ::placeholder': {
@@ -140,10 +140,10 @@ export default function DashboardHeader() {
               </Avatar>
               <Box sx={{ display: { xs: 'none', md: 'block' }, textAlign: 'left' }}>
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  John Doe
+                  Juan Pérez
                 </Typography>
                 <Typography variant="caption" sx={{ color: alpha('#FFFFFF', 0.8) }}>
-                  Admin
+                  Administrador
                 </Typography>
               </Box>
               <ExpandMoreIcon sx={{ color: alpha('#FFFFFF', 0.8), ml: { xs: 0, md: 1 } }} />
@@ -166,14 +166,14 @@ export default function DashboardHeader() {
               }}
             >
               <MenuItem sx={{ minWidth: 180, py: 1 }}>
-                <Typography variant="body2" fontWeight={500}>My Account</Typography>
+                <Typography variant="body2" fontWeight={500}>Mi Cuenta</Typography>
               </MenuItem>
               <Divider />
-              <MenuItem onClick={handleClose}>Profile</MenuItem>
-              <MenuItem onClick={handleClose}>Settings</MenuItem>
-              <MenuItem onClick={handleClose}>Billing</MenuItem>
+              <MenuItem onClick={handleClose}>Perfil</MenuItem>
+              <MenuItem onClick={handleClose}>Configuración</MenuItem>
+              <MenuItem onClick={handleClose}>Facturación</MenuItem>
               <Divider />
-              <MenuItem onClick={handleClose}>Log out</MenuItem>
+              <MenuItem onClick={handleClose}>Cerrar sesión</MenuItem>
             </Menu>
           </Box>
         </Box>
@@ -181,3 +181,6 @@ export default function DashboardHeader() {
     </Box>
   );
 }
+
+// Utilizamos memo para evitar renderizados innecesarios
+export default memo(DashboardHeader);

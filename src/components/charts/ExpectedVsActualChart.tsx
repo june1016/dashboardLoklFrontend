@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo, useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/material';
 import { useMobile } from '../../hooks/useMobile';
@@ -21,13 +21,13 @@ interface MonthlyData {
   difference: number;
 }
 
-export default function ExpectedVsActualChart() {
+function ExpectedVsActualChart() {
   const theme = useTheme();
   const isMobile = useMobile();
   const [chartData, setChartData] = useState<MonthlyData[]>([]);
 
-  useEffect(() => {
-    // Datos de ejemplo (estos se reemplazarán con datos reales de la API)
+  // Datos extraídos a useMemo para evitar recálculos innecesarios
+  const generateChartData = useMemo(() => {
     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const expectedValues = [25000000, 27000000, 28500000, 30000000, 32000000, 35000000, 38000000, 42000000, 45000000, 48000000, 52000000, 55000000];
     const actualValues = [24500000, 26800000, 27000000, 28500000, 31000000, 33000000, 37000000, 40000000, 43000000, 45500000, 49000000, 52000000];
@@ -43,20 +43,26 @@ export default function ExpectedVsActualChart() {
       };
     });
 
-    setChartData(isMobile ? data.filter((_, i) => i % 2 === 0) : data);
-  }, [isMobile]);
+    return data;
+  }, []);
 
-  // Formateo de moneda para tooltip y ejes
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    }).format(value);
-  };
+  useEffect(() => {
+    setChartData(isMobile ? generateChartData.filter((_, i) => i % 2 === 0) : generateChartData);
+  }, [isMobile, generateChartData]);
 
-  // Personalizamos el tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  // Formateo de moneda memoizado para evitar recreación
+  const formatCurrency = useMemo(() => {
+    return (value: number) => {
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0
+      }).format(value);
+    };
+  }, []);
+
+  // Personalizamos el tooltip como un componente memoizado
+  const CustomTooltip = memo(({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const expected = payload[0].value;
       const actual = payload[1].value;
@@ -99,7 +105,7 @@ export default function ExpectedVsActualChart() {
       );
     }
     return null;
-  };
+  });
 
   return (
     <Box sx={{ width: '100%', height: 400 }}>
@@ -152,3 +158,6 @@ export default function ExpectedVsActualChart() {
     </Box>
   );
 }
+
+// Utilizamos memo para evitar renderizados innecesarios
+export default memo(ExpectedVsActualChart);

@@ -1,0 +1,38 @@
+/* src/styles/global.css */
+
+/* Optimización de rendimiento para animaciones */
+.sidebar-transition * {
+  /* Optimizar para GPU en lugar de CPU */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* Forzar aceleración por hardware */
+  transform: translateZ(0);
+  will-change: transform, opacity, width;
+}
+
+/* Animaciones más fluidas para la sidebar */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Clases específicas para elementos que aparecen/desaparecen */
+.sidebar-item-enter {
+  animation: fadeIn 120ms ease-out forwards;
+}
+
+.sidebar-item-exit {
+  animation: fadeOut 80ms ease-in forwards;
+}
+
+/* Mejora de rendimiento general */
+body {
+  /* Para suavizar todas las animaciones del sitio */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

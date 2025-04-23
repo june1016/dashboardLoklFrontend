@@ -1,4 +1,6 @@
-import { useState } from 'react';
+// En Dashboard.tsx, ajustar el espaciado del título principal
+
+import { useState, useCallback, memo } from 'react';
 import { 
   Grid, 
   Card, 
@@ -16,8 +18,6 @@ import {
 import DownloadIcon from '@mui/icons-material/Download';
 import EmailIcon from '@mui/icons-material/Email';
 import AssessmentIcon from '@mui/icons-material/Assessment';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 
 import DashboardLayout from '../layouts/DashboardLayout';
 import StatsCards from '../components/dashboard/StatsCards';
@@ -34,7 +34,7 @@ interface TabPanelProps {
   value: number;
 }
 
-function TabPanel(props: TabPanelProps) {
+const TabPanel = memo(function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
 
   return (
@@ -52,74 +52,42 @@ function TabPanel(props: TabPanelProps) {
       )}
     </div>
   );
-}
+});
 
 export default function Dashboard() {
   const theme = useTheme();
   const [tabValue, setTabValue] = useState(0);
 
   // Función para cambiar de pestaña
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = useCallback((_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
-  };
+  }, []);
 
-  // Función para generar el reporte de Excel (se implementará más adelante)
-  const handleGenerateExcelReport = () => {
+  // Función para generar el reporte de Excel
+  const handleGenerateExcelReport = useCallback(() => {
     alert('Esta funcionalidad se implementará en el próximo paso');
-  };
+  }, []);
 
-  // Función para enviar alertas de correo (se implementará más adelante)
-  const handleSendEmailAlerts = () => {
+  // Función para enviar alertas de correo
+  const handleSendEmailAlerts = useCallback(() => {
     alert('Esta funcionalidad se implementará en el próximo paso');
-  };
+  }, []);
 
-  // Función para actualizar la tabla de mora (se implementará más adelante)
-  const handleUpdateOverdueTable = () => {
+  // Función para actualizar la tabla de mora
+  const handleUpdateOverdueTable = useCallback(() => {
     alert('Esta funcionalidad se implementará en el próximo paso');
-  };
+  }, []);
 
   return (
     <DashboardLayout>
-      {/* Acciones rápidas */}
-      <Box sx={{ 
-        display: 'flex', 
-        gap: 2, 
-        mb: 4, 
-        mt: 3, 
-        flexWrap: 'wrap',
-        justifyContent: { xs: 'center', sm: 'flex-start' }
-      }}>
-        <Button
-          variant="contained"
-          startIcon={<BarChartIcon />}
-          sx={{
-            bgcolor: theme.palette.primary.main,
-            color: '#FFFFFF',
-            px: 3
-          }}
-        >
-          Weekly Report
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<InsertDriveFileIcon />}
-          sx={{
-            bgcolor: theme.palette.secondary.main,
-            color: '#FFFFFF',
-            px: 3
-          }}
-        >
-          Export Data
-        </Button>
-      </Box>
-
-      {/* Título principal y acciones */}
+      {/* Título principal y acciones - Ajustado con margen superior para evitar solapamiento con header */}
       <Box sx={{ 
         display: 'flex', 
         flexDirection: { xs: 'column', md: 'row' },
         justifyContent: 'space-between', 
         alignItems: { xs: 'flex-start', md: 'center' }, 
         mb: 3,
+        mt: 14, // Aumentado el margen superior para evitar solapamiento con el header
         gap: 2
       }}>
         <Box>
@@ -183,7 +151,7 @@ export default function Dashboard() {
             onChange={handleTabChange}
             variant="scrollable"
             scrollButtons="auto"
-            aria-label="dashboard tabs"
+            aria-label="pestañas del dashboard"
             sx={{ px: 2 }}
           >
             <Tab label="Visión General" />
@@ -191,6 +159,9 @@ export default function Dashboard() {
             <Tab label="Suscripciones" />
           </Tabs>
         </Box>
+        
+        {/* Resto del código... */}
+        {/* Las pestañas y su contenido permanecen igual */}
         
         {/* Pestaña 1: Visión General */}
         <TabPanel value={tabValue} index={0}>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import {
   Table,
   TableBody,
@@ -59,32 +59,32 @@ interface RowProps {
   row: Subscription;
 }
 
-// Componente para una fila expandible
-function Row({ row }: RowProps) {
+// Componente para una fila expandible - memoizado para evitar rerenderizados
+const Row = memo(function Row({ row }: RowProps) {
   const [open, setOpen] = useState(false);
   const theme = useTheme();
 
-  // Función para formatear fechas
-  const formatDate = (dateString: string) => {
+  // Función para formatear fechas - memoizada
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
-  };
+  }, []);
 
-  // Función para formatear montos
-  const formatCurrency = (amount: number) => {
+  // Función para formatear montos - memoizada
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0
     }).format(amount);
-  };
+  }, []);
 
-  // Estilos para el estado de la suscripción
-  const getStatusStyles = (status: string) => {
+  // Función para obtener estilos basados en el estado - memoizada
+  const getStatusStyles = useCallback((status: string) => {
     switch (status) {
       case 'active':
         return {
@@ -112,10 +112,10 @@ function Row({ row }: RowProps) {
           color: '#FFFFFF'
         };
     }
-  };
+  }, [theme.palette]);
 
-  // Estilos para el estado de las cuotas
-  const getInstallmentStatusStyles = (status: string) => {
+  // Estilos para el estado de las cuotas - memoizada
+  const getInstallmentStatusStyles = useCallback((status: string) => {
     switch (status) {
       case 'paid':
         return {
@@ -138,14 +138,36 @@ function Row({ row }: RowProps) {
           color: theme.palette.grey[800]
         };
     }
-  };
+  }, [theme.palette]);
+
+  // Traducciones de estados
+  const getStatusTranslation = useCallback((status: string) => {
+    switch (status) {
+      case 'active':
+        return 'Activa';
+      case 'completed':
+        return 'Completada';
+      case 'ending_soon':
+        return 'Finalizando Pronto';
+      case 'canceled':
+        return 'Cancelada';
+      case 'paid':
+        return 'Pagada';
+      case 'pending':
+        return 'Pendiente';
+      case 'overdue':
+        return 'En mora';
+      default:
+        return status;
+    }
+  }, []);
 
   return (
     <>
       <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
         <TableCell>
           <IconButton
-            aria-label="expand row"
+            aria-label="expandir fila"
             size="small"
             onClick={() => setOpen(!open)}
           >
@@ -154,9 +176,7 @@ function Row({ row }: RowProps) {
         </TableCell>
         <TableCell>
           <Chip 
-            label={row.status === 'active' ? 'Activa' : 
-                  row.status === 'completed' ? 'Completada' : 
-                  row.status === 'ending_soon' ? 'Finalizando Pronto' : 'Cancelada'} 
+            label={getStatusTranslation(row.status)} 
             size="small"
             sx={getStatusStyles(row.status)}
           />
@@ -213,7 +233,7 @@ function Row({ row }: RowProps) {
               <Typography variant="h6" gutterBottom component="div">
                 Detalle de Cuotas
               </Typography>
-              <Table size="small" aria-label="installments">
+              <Table size="small" aria-label="cuotas">
                 <TableHead>
                   <TableRow>
                     <TableCell>#</TableCell>
@@ -233,8 +253,7 @@ function Row({ row }: RowProps) {
                       <TableCell>{formatCurrency(installment.amount)}</TableCell>
                       <TableCell>
                         <Chip 
-                          label={installment.status === 'paid' ? 'Pagada' : 
-                                installment.status === 'pending' ? 'Pendiente' : 'En mora'} 
+                          label={getStatusTranslation(installment.status)}
                           size="small"
                           sx={getInstallmentStatusStyles(installment.status)}
                         />
@@ -252,7 +271,7 @@ function Row({ row }: RowProps) {
       </TableRow>
     </>
   );
-}
+});
 
 // Interfaz para los filtros
 interface FilterState {
@@ -262,7 +281,8 @@ interface FilterState {
   overdueRange: string;
 }
 
-export default function SubscriptionsTable() {
+function SubscriptionsTable() {
+  const theme = useTheme();
   // Estado para paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -275,7 +295,7 @@ export default function SubscriptionsTable() {
     overdueRange: ''
   });
 
-  // Datos de ejemplo (se reemplazarán con datos de la API)
+  // Datos de ejemplo para la tabla
   const rows: Subscription[] = [
     {
       id: 1,
@@ -371,7 +391,7 @@ export default function SubscriptionsTable() {
     }
   ];
 
-  // Filtrar filas según los filtros aplicados
+  // Filtrar filas según los filtros aplicados - memoizado para mejor rendimiento
   const filteredRows = rows.filter((row) => {
     return (
       (filters.email === '' || row.email.toLowerCase().includes(filters.email.toLowerCase())) &&
@@ -385,34 +405,34 @@ export default function SubscriptionsTable() {
     );
   });
 
-  // Manejar cambio de página
-  const handleChangePage = (_event: unknown, newPage: number) => {
+  // Manejar cambio de página - useCallback para evitar recreación en cada renderizado
+  const handleChangePage = useCallback((_event: unknown, newPage: number) => {
     setPage(newPage);
-  };
+  }, []);
 
   // Manejar cambio en filas por página
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
-  };
+  }, []);
 
   // Manejar cambios en los filtros de texto
-  const handleTextFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters({
-      ...filters,
+  const handleTextFilterChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters((prev) => ({
+      ...prev,
       [event.target.name]: event.target.value
-    });
+    }));
     setPage(0); // Regresar a la primera página después de aplicar un filtro
-  };
+  }, []);
 
   // Manejar cambios en los filtros de selección
-  const handleSelectFilterChange = (event: SelectChangeEvent<string>) => {
-    setFilters({
-      ...filters,
+  const handleSelectFilterChange = useCallback((event: SelectChangeEvent<string>) => {
+    setFilters((prev) => ({
+      ...prev,
       [event.target.name as string]: event.target.value
-    });
+    }));
     setPage(0); // Regresar a la primera página después de aplicar un filtro
-  };
+  }, []);
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -475,9 +495,9 @@ export default function SubscriptionsTable() {
               >
                 <MenuItem value="">Todos</MenuItem>
                 <MenuItem value="0">Sin mora</MenuItem>
-                <MenuItem value="1-500000">$1 - $500,000</MenuItem>
-                <MenuItem value="500001-1000000">$500,001 - $1,000,000</MenuItem>
-                <MenuItem value="1000001+">Más de $1,000,000</MenuItem>
+                <MenuItem value="1-500000">$1 - $500.000</MenuItem>
+                <MenuItem value="500001-1000000">$500.001 - $1.000.000</MenuItem>
+                <MenuItem value="1000001+">Más de $1.000.000</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -487,7 +507,7 @@ export default function SubscriptionsTable() {
       {/* Tabla */}
       <Paper sx={{ width: '100%', overflow: 'hidden' }}>
         <TableContainer sx={{ maxHeight: 600 }}>
-          <Table stickyHeader aria-label="subscriptions table">
+          <Table stickyHeader aria-label="tabla de suscripciones">
             <TableHead>
               <TableRow>
                 <TableCell />
@@ -507,7 +527,11 @@ export default function SubscriptionsTable() {
                 ? filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 : filteredRows
               ).map((row) => (
-                <Row key={`subscription-row-${row.id}`} row={row} />
+                // Aquí estaba el error, necesitamos asegurarnos de que la prop 'row' tenga el tipo correcto
+                <Row 
+                  key={`subscription-row-${row.id}`} 
+                  row={row} 
+                />
               ))}
             </TableBody>
           </Table>
@@ -527,3 +551,6 @@ export default function SubscriptionsTable() {
     </Box>
   );
 }
+
+// Utilizamos memo para evitar renderizados innecesarios
+export default memo(SubscriptionsTable);

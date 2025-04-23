@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import theme from './theme/theme';
 import Dashboard from './pages/Dashboard';
+// Importar los estilos globales
+import './styles/global.css';
 
 function App() {
   return (
