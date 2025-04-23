@@ -1,38 +1,61 @@
-/* src/styles/global.css */
+/* src/styles/global.css optimizado */
 
-/* Optimización de rendimiento para animaciones */
-.sidebar-transition * {
-  /* Optimizar para GPU en lugar de CPU */
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+/* Utilizamos CSS más optimizado para animaciones */
+html {
+  /* Previene saltos durante transiciones */
+  overflow-x: hidden;
+}
+
+/* Optimización de rendimiento para elementos que necesitan animaciones */
+.perf-boost {
   /* Forzar aceleración por hardware */
   transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  /* Hints al navegador para preparar cambios */
   will-change: transform, opacity, width;
 }
 
-/* Animaciones más fluidas para la sidebar */
+/* Animaciones más rápidas para la sidebar */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-10px); }
 }
 
-/* Clases específicas para elementos que aparecen/desaparecen */
+/* Clases para elementos con entrada/salida */
 .sidebar-item-enter {
-  animation: fadeIn 120ms ease-out forwards;
+  animation: fadeIn 80ms ease-out forwards;
 }
 
 .sidebar-item-exit {
-  animation: fadeOut 80ms ease-in forwards;
+  animation: fadeOut 60ms ease-in forwards;
 }
 
-/* Mejora de rendimiento general */
+/* Optimización general */
 body {
-  /* Para suavizar todas las animaciones del sitio */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Clase para reducir el efecto de parpadeo en transiciones */
+.anti-flicker {
+  transform: translate3d(0,0,0);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Optimizaciones para renderizado de texto */
+h1, h2, h3, h4, h5, h6, p, span {
+  max-width: 100%;
+}
+
+/* Prevenir CLS (Cumulative Layout Shift) */
+img, button, .MuiAvatar-root {
+  transform: translateZ(0);
 }

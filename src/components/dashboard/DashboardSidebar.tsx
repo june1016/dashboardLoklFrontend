@@ -21,7 +21,7 @@ import {
   ChevronRight as ChevronRightIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
-import { memo, useEffect } from 'react';
+import { memo, useMemo } from 'react';
 
 interface DashboardSidebarProps {
   collapsed: boolean;
@@ -35,27 +35,69 @@ interface MenuItem {
   active: boolean;
 }
 
+// Componente memoizado para renderizar cada item del menú
+const MenuItemComponent = memo(({ item, collapsed }: { item: MenuItem, collapsed: boolean }) => {
+  const theme = useTheme();
+  
+  return (
+    <ListItem disablePadding sx={{ mb: 0.5 }}>
+      <ListItemButton
+        component={Link}
+        to={item.path}
+        sx={{
+          minHeight: 48,
+          justifyContent: collapsed ? 'center' : 'initial',
+          px: 2.5,
+          borderRadius: 1,
+          mx: collapsed ? 0.5 : 1,
+          ...(item.active && {
+            bgcolor: alpha(theme.palette.primary.main, 0.1),
+            color: 'primary.main',
+            '&:hover': {
+              bgcolor: alpha(theme.palette.primary.main, 0.15),
+            },
+            '& .MuiListItemIcon-root': {
+              color: 'primary.main',
+            }
+          })
+        }}
+      >
+        <ListItemIcon
+          sx={{
+            minWidth: 0,
+            mr: collapsed ? 0 : 2,
+            justifyContent: 'center',
+            color: item.active ? 'primary.main' : 'text.secondary'
+          }}
+        >
+          <item.icon />
+        </ListItemIcon>
+        {!collapsed && (
+          <ListItemText 
+            primary={item.text}
+            primaryTypographyProps={{ 
+              fontSize: 14,
+              fontWeight: item.active ? 600 : 400
+            }}
+          />
+        )}
+      </ListItemButton>
+    </ListItem>
+  );
+});
+
 function DashboardSidebar({ collapsed, onToggleCollapse }: DashboardSidebarProps) {
   const theme = useTheme();
 
-  // Usar useEffect para aplicar una clase CSS para animaciones más suaves
-  useEffect(() => {
-    // Añadir una clase al body para manejar transiciones CSS más fluidas
-    document.body.classList.toggle('sidebar-transition', true);
-    
-    return () => {
-      document.body.classList.toggle('sidebar-transition', false);
-    };
-  }, []);
-
-  const menuItems: MenuItem[] = [
+  // Memoizamos los items del menú para evitar recálculos en cada renderizado
+  const menuItems = useMemo<MenuItem[]>(() => [
     { text: 'Panel Principal', icon: HomeIcon, path: '/', active: true },
     { text: 'Analítica', icon: BarChartIcon, path: '/analytics', active: false },
     { text: 'Suscripciones', icon: ShoppingCartIcon, path: '/orders', active: false },
     { text: 'Clientes', icon: PeopleIcon, path: '/customers', active: false },
     { text: 'Facturación', icon: CreditCardIcon, path: '/billing', active: false },
     { text: 'Configuración', icon: SettingsIcon, path: '/settings', active: false },
-  ];
+  ], []);
 
   return (
     <Box 
@@ -66,14 +108,18 @@ function DashboardSidebar({ collapsed, onToggleCollapse }: DashboardSidebarProps
         borderColor: 'divider',
         display: 'flex',
         flexDirection: 'column',
-        // Usar transitionProperty específico para mayor optimización
+        // Transición acelerada para mayor fluidez
         transition: theme.transitions.create(['width'], {
-          easing: theme.transitions.easing.easeOut, // Usa easeOut para una sensación más natural
-          duration: 120, // Reducir la duración aún más para que se sienta más rápida
+          easing: theme.transitions.easing.sharp, // Sharp en lugar de easeOut para efecto instantáneo
+          duration: 80, // Reducida de 120ms a 80ms para mayor velocidad
         }),
-        width: collapsed ? 72 : 240, // Reducir el ancho cuando está colapsado para mejor diseño
+        width: collapsed ? 72 : 240,
         overflowX: 'hidden',
-        position: 'relative', // Necesario para posicionar absolutamente el botón
+        position: 'relative',
+        // Aplicamos will-change para optimizar el rendimiento de la animación
+        willChange: 'width', 
+        // Forzamos aceleración por hardware 
+        transform: 'translateZ(0)',
       }}
     >
       {/* Header */}
@@ -88,18 +134,32 @@ function DashboardSidebar({ collapsed, onToggleCollapse }: DashboardSidebarProps
           justifyContent: collapsed ? 'center' : 'space-between',
         }}
       >
-        {/* Logo - solo visible cuando está expandido */}
-        {!collapsed && (
-          <img 
-            src="/src/assets/Logo.png" 
-            alt="LOKL Logo" 
-            style={{ 
-              height: 40, 
-              maxWidth: 120,
-              objectFit: 'contain' 
-            }} 
-          />
-        )}
+        {/* Logo - con transición de opacity para mejor apariencia */}
+        <Box 
+          sx={{
+            opacity: collapsed ? 0 : 1,
+            width: collapsed ? 0 : 'auto',
+            overflow: 'hidden',
+            transition: theme.transitions.create(['opacity', 'width'], {
+              duration: 80,
+              easing: theme.transitions.easing.sharp,
+            }),
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          {!collapsed && (
+            <img 
+              src="/src/assets/Logo.png" 
+              alt="LOKL Logo" 
+              style={{ 
+                height: 40, 
+                maxWidth: 120,
+                objectFit: 'contain' 
+              }} 
+            />
+          )}
+        </Box>
 
         {/* Botón de toggle - ajustado para ambos estados */}
         <IconButton 
@@ -123,77 +183,44 @@ function DashboardSidebar({ collapsed, onToggleCollapse }: DashboardSidebarProps
       {/* Navigation */}
       <List sx={{ py: 2, flexGrow: 1 }}>
         {menuItems.map((item) => (
-          <ListItem key={`menu-item-${item.text}`} disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton
-              component={Link}
-              to={item.path}
-              sx={{
-                minHeight: 48,
-                justifyContent: collapsed ? 'center' : 'initial',
-                px: 2.5,
-                borderRadius: 1,
-                mx: collapsed ? 0.5 : 1, // Ajuste del margen para mejorar apariencia colapsada
-                ...(item.active && {
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                  color: 'primary.main',
-                  '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.15),
-                  },
-                  '& .MuiListItemIcon-root': {
-                    color: 'primary.main',
-                  }
-                })
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: collapsed ? 0 : 2,
-                  justifyContent: 'center',
-                  color: item.active ? 'primary.main' : 'text.secondary'
-                }}
-              >
-                <item.icon />
-              </ListItemIcon>
-              {!collapsed && (
-                <ListItemText 
-                  primary={item.text}
-                  primaryTypographyProps={{ 
-                    fontSize: 14,
-                    fontWeight: item.active ? 600 : 400
-                  }}
-                />
-              )}
-            </ListItemButton>
-          </ListItem>
+          <MenuItemComponent 
+            key={`menu-item-${item.text}`} 
+            item={item} 
+            collapsed={collapsed} 
+          />
         ))}
       </List>
 
-      {/* Footer - solo mostrar cuando está expandido */}
-      {!collapsed && (
-        <Box 
-          sx={{ 
-            p: 2, 
-            borderTop: 1, 
-            borderColor: 'divider',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-          }}
-        >
-          <Box>
-            <Typography variant="body2" fontWeight={500}>
-              LOKL Pro
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              5 usuarios
-            </Typography>
-          </Box>
+      {/* Footer - con transición de opacity */}
+      <Box 
+        sx={{ 
+          p: 2, 
+          borderTop: 1, 
+          borderColor: 'divider',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          opacity: collapsed ? 0 : 1,
+          maxHeight: collapsed ? 0 : 64,
+          overflow: 'hidden',
+          transition: theme.transitions.create(['opacity', 'max-height'], {
+            duration: 80,
+            easing: theme.transitions.easing.sharp,
+          }),
+        }}
+      >
+        <Box>
+          <Typography variant="body2" fontWeight={500}>
+            LOKL Pro
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            5 usuarios
+          </Typography>
         </Box>
-      )}
+      </Box>
     </Box>
   );
 }
 
-// Utilizamos memo para evitar renderizados innecesarios
+// Memoizamos todo el componente para evitar renderizados innecesarios
 export default memo(DashboardSidebar);
