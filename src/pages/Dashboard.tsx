@@ -10,11 +10,14 @@ import {
   Tab,
   Tabs,
   Button,
-  Divider
+  Divider,
+  Paper
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import EmailIcon from '@mui/icons-material/Email';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 
 import DashboardLayout from '../layouts/DashboardLayout';
 import StatsCards from '../components/dashboard/StatsCards';
@@ -77,8 +80,48 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
+      {/* Acciones rápidas */}
+      <Box sx={{ 
+        display: 'flex', 
+        gap: 2, 
+        mb: 4, 
+        mt: 3, 
+        flexWrap: 'wrap',
+        justifyContent: { xs: 'center', sm: 'flex-start' }
+      }}>
+        <Button
+          variant="contained"
+          startIcon={<BarChartIcon />}
+          sx={{
+            bgcolor: theme.palette.primary.main,
+            color: '#FFFFFF',
+            px: 3
+          }}
+        >
+          Weekly Report
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<InsertDriveFileIcon />}
+          sx={{
+            bgcolor: theme.palette.secondary.main,
+            color: '#FFFFFF',
+            px: 3
+          }}
+        >
+          Export Data
+        </Button>
+      </Box>
+
       {/* Título principal y acciones */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', md: 'row' },
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'flex-start', md: 'center' }, 
+        mb: 3,
+        gap: 2
+      }}>
         <Box>
           <Typography variant="h4" fontWeight="bold">
             Dashboard de Suscripciones LOKL
@@ -88,7 +131,13 @@ export default function Dashboard() {
           </Typography>
         </Box>
         
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 2,
+          flexWrap: 'wrap',
+          justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+          width: { xs: '100%', md: 'auto' }
+        }}>
           <Button 
             variant="outlined" 
             color="primary" 
@@ -122,14 +171,20 @@ export default function Dashboard() {
       <StatsCards />
 
       {/* Gráficos y Tablas */}
-      <Box sx={{ width: '100%', mt: 3 }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Paper sx={{ 
+        borderRadius: 2, 
+        overflow: 'hidden', 
+        boxShadow: theme.shadows[2],
+        mt: 4
+      }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
           <Tabs 
             value={tabValue} 
             onChange={handleTabChange}
             variant="scrollable"
             scrollButtons="auto"
             aria-label="dashboard tabs"
+            sx={{ px: 2 }}
           >
             <Tab label="Visión General" />
             <Tab label="Mora y Pagos" />
@@ -139,130 +194,136 @@ export default function Dashboard() {
         
         {/* Pestaña 1: Visión General */}
         <TabPanel value={tabValue} index={0}>
-          <Grid container spacing={3}>
-            <Grid size={12}>
-              <Card>
-                <CardHeader
-                  title="Dinero Esperado vs. Real (Mensual)"
-                  subheader="Comparación entre el dinero esperado por mes frente al dinero realmente recibido"
-                  sx={{
-                    background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                    color: 'white',
-                    '& .MuiCardHeader-subheader': {
-                      color: 'rgba(255, 255, 255, 0.7)',
-                    }
-                  }}
-                />
-                <CardContent>
-                  <ExpectedVsActualChart />
-                </CardContent>
-              </Card>
+          <Box sx={{ p: 2 }}>
+            <Grid container spacing={3}>
+              <Grid size={12}>
+                <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+                  <CardHeader
+                    title="Dinero Esperado vs. Real (Mensual)"
+                    subheader="Comparación entre el dinero esperado por mes frente al dinero realmente recibido"
+                    sx={{
+                      background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                      color: 'white',
+                      '& .MuiCardHeader-subheader': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                      }
+                    }}
+                  />
+                  <CardContent>
+                    <ExpectedVsActualChart />
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Card sx={{ height: '100%', boxShadow: 2, borderRadius: 2 }}>
+                  <CardHeader
+                    title="Suscripciones Activas y Próximas a Finalizar"
+                    subheader="Distribución de suscripciones por estado"
+                    sx={{
+                      background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                      color: 'white',
+                      '& .MuiCardHeader-subheader': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                      }
+                    }}
+                  />
+                  <CardContent>
+                    <SubscriptionStatusChart />
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Card sx={{ height: '100%', boxShadow: 2, borderRadius: 2 }}>
+                  <CardHeader
+                    title="Mora por Proyecto"
+                    subheader="Desglose de mora acumulada por proyecto"
+                    sx={{
+                      background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                      color: 'white',
+                      '& .MuiCardHeader-subheader': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                      }
+                    }}
+                  />
+                  <CardContent>
+                    <OverdueByProject />
+                  </CardContent>
+                </Card>
+              </Grid>
             </Grid>
-            
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card sx={{ height: '100%' }}>
-                <CardHeader
-                  title="Suscripciones Activas y Próximas a Finalizar"
-                  subheader="Distribución de suscripciones por estado"
-                  sx={{
-                    background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                    color: 'white',
-                    '& .MuiCardHeader-subheader': {
-                      color: 'rgba(255, 255, 255, 0.7)',
-                    }
-                  }}
-                />
-                <CardContent>
-                  <SubscriptionStatusChart />
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card sx={{ height: '100%' }}>
-                <CardHeader
-                  title="Mora por Proyecto"
-                  subheader="Desglose de mora acumulada por proyecto"
-                  sx={{
-                    background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                    color: 'white',
-                    '& .MuiCardHeader-subheader': {
-                      color: 'rgba(255, 255, 255, 0.7)',
-                    }
-                  }}
-                />
-                <CardContent>
-                  <OverdueByProject />
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+          </Box>
         </TabPanel>
         
         {/* Pestaña 2: Mora y Pagos */}
         <TabPanel value={tabValue} index={1}>
-          <Grid container spacing={3}>
-            <Grid size={12}>
-              <Card>
-                <CardHeader
-                  title="Mora Mensual y Acumulada"
-                  subheader="Visualización de la mora a través del tiempo"
-                  sx={{
-                    background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                    color: 'white',
-                    '& .MuiCardHeader-subheader': {
-                      color: 'rgba(255, 255, 255, 0.7)',
-                    }
-                  }}
-                />
-                <CardContent>
-                  <MonthlyOverdueChart />
-                </CardContent>
-              </Card>
+          <Box sx={{ p: 2 }}>
+            <Grid container spacing={3}>
+              <Grid size={12}>
+                <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+                  <CardHeader
+                    title="Mora Mensual y Acumulada"
+                    subheader="Visualización de la mora a través del tiempo"
+                    sx={{
+                      background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                      color: 'white',
+                      '& .MuiCardHeader-subheader': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                      }
+                    }}
+                  />
+                  <CardContent>
+                    <MonthlyOverdueChart />
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              <Grid size={12}>
+                <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+                  <CardHeader
+                    title="Mora por Proyecto"
+                    subheader="Desglose de mora acumulada por proyecto"
+                    sx={{
+                      background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                      color: 'white',
+                      '& .MuiCardHeader-subheader': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                      }
+                    }}
+                  />
+                  <CardContent>
+                    <OverdueByProject />
+                  </CardContent>
+                </Card>
+              </Grid>
             </Grid>
-            
-            <Grid size={12}>
-              <Card>
-                <CardHeader
-                  title="Mora por Proyecto"
-                  subheader="Desglose de mora acumulada por proyecto"
-                  sx={{
-                    background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                    color: 'white',
-                    '& .MuiCardHeader-subheader': {
-                      color: 'rgba(255, 255, 255, 0.7)',
-                    }
-                  }}
-                />
-                <CardContent>
-                  <OverdueByProject />
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+          </Box>
         </TabPanel>
         
         {/* Pestaña 3: Suscripciones */}
         <TabPanel value={tabValue} index={2}>
-          <Card>
-            <CardHeader
-              title="Tabla de Suscripciones"
-              subheader="Detalle de todas las suscripciones activas y su estado"
-              sx={{
-                background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                color: 'white',
-                '& .MuiCardHeader-subheader': {
-                  color: 'rgba(255, 255, 255, 0.7)',
-                }
-              }}
-            />
-            <Divider />
-            <CardContent>
-              <SubscriptionsTable />
-            </CardContent>
-          </Card>
+          <Box sx={{ p: 2 }}>
+            <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+              <CardHeader
+                title="Tabla de Suscripciones"
+                subheader="Detalle de todas las suscripciones activas y su estado"
+                sx={{
+                  background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                  color: 'white',
+                  '& .MuiCardHeader-subheader': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  }
+                }}
+              />
+              <Divider />
+              <CardContent sx={{ p: { xs: 1, sm: 2 } }}>
+                <SubscriptionsTable />
+              </CardContent>
+            </Card>
+          </Box>
         </TabPanel>
-      </Box>
+      </Paper>
     </DashboardLayout>
   );
 }

@@ -26,7 +26,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const sidebarWidth = sidebarCollapsed ? 72 : 240;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ 
+      display: 'flex', 
+      minHeight: '100vh', 
+      bgcolor: '#f5f7fa', // Fondo más claro para contraste
+      overflow: 'hidden'
+    }}>
       {/* Sidebar para desktop */}
       {!isMobile && (
         <Box
@@ -38,6 +43,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.enteringScreen,
             }),
+            zIndex: theme.zIndex.drawer
           }}
         >
           <DashboardSidebar 
@@ -60,7 +66,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: 240,
+              boxShadow: 3
             },
+            zIndex: theme.zIndex.drawer
           }}
         >
           <DashboardSidebar 
@@ -80,6 +88,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
           overflow: 'hidden',
         }}
       >

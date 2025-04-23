@@ -11,7 +11,7 @@ export default function DashboardContent({ children }: DashboardContentProps) {
       sx={{
         position: 'relative',
         zIndex: 1,
-        mt: -8, // Eleva el contenido para que se superponga al header
+        mt: -10, // Ajustado para elevar aún más el contenido sobre el header
         px: 4,
         pb: 4,
         display: 'flex',

@@ -109,9 +109,13 @@ export const theme = createTheme({
         root: {
           borderRadius: 8,
           padding: '8px 16px',
+          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
         },
         contained: {
-          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
+          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+          '&:hover': {
+            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
+          },
         },
       },
     },
@@ -152,6 +156,58 @@ export const theme = createTheme({
       styleOverrides: {
         paper: {
           border: 'none',
+        },
+      },
+    },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          fontWeight: 500,
+          minHeight: 48,
+        },
+      },
+    },
+    MuiTabs: {
+      styleOverrides: {
+        indicator: {
+          height: 3,
+          borderTopLeftRadius: 3,
+          borderTopRightRadius: 3,
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderBottom: '1px solid rgba(224, 224, 224, 1)',
+          padding: '16px',
+        },
+        head: {
+          fontWeight: 600,
+          backgroundColor: 'rgba(248, 249, 250, 1)',
+        },
+      },
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          margin: '8px 0',
+        },
+      },
+    },
+    MuiAvatar: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          fontWeight: 500,
         },
       },
     },
