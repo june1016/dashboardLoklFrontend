@@ -282,7 +282,7 @@ interface FilterState {
 }
 
 function SubscriptionsTable() {
-  const theme = useTheme();
+  // const theme = useTheme(); 
   // Estado para paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);

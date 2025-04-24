@@ -12,15 +12,14 @@ import {
 import { alpha } from '@mui/material/styles';
 import {
   Home as HomeIcon,
-  BarChart as BarChartIcon,
-  ShoppingCart as ShoppingCartIcon,
+  AttachMoney as MoneyIcon, // Nuevo ícono
   People as PeopleIcon,
-  CreditCard as CreditCardIcon,
-  Settings as SettingsIcon,
+  AutoFixHigh as AutomationIcon, // Nuevo ícono
+  Analytics as AnalyticsIcon, // Nuevo ícono
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon
 } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom'; // Importación de useLocation
 import { memo, useMemo } from 'react';
 
 interface DashboardSidebarProps {
@@ -88,16 +87,17 @@ const MenuItemComponent = memo(({ item, collapsed }: { item: MenuItem, collapsed
 
 function DashboardSidebar({ collapsed, onToggleCollapse }: DashboardSidebarProps) {
   const theme = useTheme();
+  const location = useLocation(); // Hook para obtener la ruta actual
+  const currentPath = location.pathname;
 
-  // Memoizamos los items del menú para evitar recálculos en cada renderizado
+  // Memoizamos los items del menú con paths actualizados
   const menuItems = useMemo<MenuItem[]>(() => [
-    { text: 'Panel Principal', icon: HomeIcon, path: '/', active: true },
-    { text: 'Analítica', icon: BarChartIcon, path: '/analytics', active: false },
-    { text: 'Suscripciones', icon: ShoppingCartIcon, path: '/orders', active: false },
-    { text: 'Clientes', icon: PeopleIcon, path: '/customers', active: false },
-    { text: 'Facturación', icon: CreditCardIcon, path: '/billing', active: false },
-    { text: 'Configuración', icon: SettingsIcon, path: '/settings', active: false },
-  ], []);
+    { text: 'Panel Principal', icon: HomeIcon, path: '/', active: currentPath === '/' },
+    { text: 'Suscripciones', icon: PeopleIcon, path: '/subscriptions', active: currentPath === '/subscriptions' },
+    { text: 'Mora y Pagos', icon: MoneyIcon, path: '/overdue', active: currentPath === '/overdue' },
+    { text: 'Automatizaciones', icon: AutomationIcon, path: '/automation', active: currentPath === '/automation' },
+    { text: 'Analítica', icon: AnalyticsIcon, path: '/analytics', active: currentPath === '/analytics' },
+  ], [currentPath]);
 
   return (
     <Box 

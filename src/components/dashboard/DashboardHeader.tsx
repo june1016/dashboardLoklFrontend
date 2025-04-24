@@ -64,10 +64,11 @@ function DashboardHeader() {
       >
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
           <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
-            Panel de Control
+            Dashboard
           </Typography>
           <Typography variant="subtitle1" sx={{ color: alpha('#FFFFFF', 0.8), mt: 0.5 }}>
-            Bienvenido, resumen de tu negocio
+          para el monitoreo y gestión de las suscripciones de la 
+          empresa.
           </Typography>
         </Box>
 
