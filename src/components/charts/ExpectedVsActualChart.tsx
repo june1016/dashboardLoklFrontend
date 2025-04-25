@@ -1,6 +1,6 @@
 import { useEffect, useState, memo, useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box } from '@mui/material';
+import { Box, CircularProgress, Alert, Typography } from '@mui/material';
 import { useMobile } from '../../hooks/useMobile';
 import {
   ComposedChart,
@@ -13,6 +13,8 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
+import { dashboardService } from '../../api/api';
+import { useDataFetching } from '../../hooks/useDataFetching';
 
 interface MonthlyData {
   name: string;
@@ -25,30 +27,24 @@ function ExpectedVsActualChart() {
   const theme = useTheme();
   const isMobile = useMobile();
   const [chartData, setChartData] = useState<MonthlyData[]>([]);
+  
+  // Obtener el año actual para usarlo como parámetro por defecto
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
 
-  // Datos extraídos a useMemo para evitar recálculos innecesarios
-  const generateChartData = useMemo(() => {
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    const expectedValues = [25000000, 27000000, 28500000, 30000000, 32000000, 35000000, 38000000, 42000000, 45000000, 48000000, 52000000, 55000000];
-    const actualValues = [24500000, 26800000, 27000000, 28500000, 31000000, 33000000, 37000000, 40000000, 43000000, 45500000, 49000000, 52000000];
-    
-    const data = months.map((month, index) => {
-      const expected = expectedValues[index];
-      const actual = actualValues[index];
-      return {
-        name: month,
-        expected,
-        actual,
-        difference: actual - expected
-      };
-    });
+  // Usar el hook para obtener datos reales de la API
+  const { data, loading, error } = useDataFetching<MonthlyData[]>({
+    initialData: [],
+    fetchFn: () => dashboardService.getExpectedVsActual(currentYear),
+    dependencies: [currentYear]
+  });
 
-    return data;
-  }, []);
-
+  // Procesar datos cuando cambian
   useEffect(() => {
-    setChartData(isMobile ? generateChartData.filter((_, i) => i % 2 === 0) : generateChartData);
-  }, [isMobile, generateChartData]);
+    if (data && data.length > 0) {
+      // Si estamos en móvil, mostrar menos datos
+      setChartData(isMobile ? data.filter((_, i) => i % 2 === 0) : data);
+    }
+  }, [data, isMobile]);
 
   // Formateo de moneda memoizado para evitar recreación
   const formatCurrency = useMemo(() => {
@@ -67,7 +63,10 @@ function ExpectedVsActualChart() {
       const expected = payload[0].value;
       const actual = payload[1].value;
       const difference = actual - expected;
-      const percentage = ((actual / expected) * 100).toFixed(1);
+      // Evitar división por cero
+      const percentage = expected === 0 
+        ? '0.0' 
+        : ((actual / expected) * 100).toFixed(1);
       
       return (
         <Box
@@ -106,6 +105,40 @@ function ExpectedVsActualChart() {
     }
     return null;
   });
+
+  // Mostrar estado de carga
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Mostrar error si ocurre
+  if (error) {
+    return (
+      <Box sx={{ height: 400, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error al cargar datos financieros: {error.message}
+        </Alert>
+        <Typography variant="body2" color="text.secondary" textAlign="center">
+          Intenta recargar la página. Si el problema persiste, contacta al administrador.
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Si no hay datos
+  if (!chartData || chartData.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+        <Typography variant="body2" color="text.secondary">
+          No hay datos financieros disponibles para mostrar
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: '100%', height: 400 }}>

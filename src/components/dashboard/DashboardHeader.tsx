@@ -141,7 +141,7 @@ function DashboardHeader() {
               </Avatar>
               <Box sx={{ display: { xs: 'none', md: 'block' }, textAlign: 'left' }}>
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  Juan Pérez
+                  Juan Esteban
                 </Typography>
                 <Typography variant="caption" sx={{ color: alpha('#FFFFFF', 0.8) }}>
                   Administrador

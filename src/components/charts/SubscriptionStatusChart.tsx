@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, Typography, useTheme, CircularProgress, Alert } from '@mui/material';
 import {
   PieChart,
   Pie,
@@ -8,33 +8,69 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
+import { dashboardService } from '../../api/api';
+import { useDataFetching } from '../../hooks/useDataFetching';
 
+// Interfaces para tipado
 interface SubscriptionData {
   name: string;
   value: number;
   description: string;
 }
 
+interface ApiSubscriptionResponse {
+  active: Array<{
+    id: string;
+    status: string;
+    project: string;
+    investment: number;
+    units: number;
+    remainingInstallments: number;
+    totalInstallments: number;
+  }>;
+  endingSoon: Array<{
+    id: string;
+    status: string;
+    project: string;
+    investment: number;
+    units: number;
+    remainingInstallments: number;
+    totalInstallments: number;
+  }>;
+  total: number;
+}
+
 export default function SubscriptionStatusChart() {
   const theme = useTheme();
+
+  // Usar el hook de fetching para obtener los datos
+  const { data, loading, error } = useDataFetching<ApiSubscriptionResponse>({
+    initialData: { active: [], endingSoon: [], total: 0 },
+    fetchFn: dashboardService.getActiveSubscriptions,
+    dependencies: []
+  });
+
+  // Estado para los datos procesados para el gráfico
   const [chartData, setChartData] = useState<SubscriptionData[]>([]);
 
+  // Procesar los datos cuando se reciben de la API
   useEffect(() => {
-    // Datos de ejemplo (estos se reemplazarán con datos reales de la API)
-    const data: SubscriptionData[] = [
-      { 
-        name: 'Activas', 
-        value: 145, 
-        description: 'Suscripciones actualmente en curso'
-      },
-      { 
-        name: 'Finalizando Pronto', 
-        value: 38, 
-        description: 'Suscripciones con 3 cuotas o menos restantes'
-      }
-    ];
-    setChartData(data);
-  }, []);
+    if (data) {
+      const processedData: SubscriptionData[] = [
+        { 
+          name: 'Activas', 
+          value: data.active.length, 
+          description: 'Suscripciones actualmente en curso'
+        },
+        { 
+          name: 'Finalizando Pronto', 
+          value: data.endingSoon.length, 
+          description: 'Suscripciones con 3 cuotas o menos restantes'
+        }
+      ];
+      setChartData(processedData);
+    }
+  }, [data]);
 
   // Colores personalizados para el gráfico
   const COLORS = [theme.palette.success.main, theme.palette.warning.main];
@@ -73,6 +109,8 @@ export default function SubscriptionStatusChart() {
     outerRadius,
     value,
   }: any) => {
+    if (value === 0) return null; // No mostrar etiqueta para valores cero
+    
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
     const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
@@ -90,6 +128,37 @@ export default function SubscriptionStatusChart() {
       </text>
     );
   };
+
+  // Mostrar estado de carga
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 250 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Mostrar error si ocurre
+  if (error) {
+    return (
+      <Box sx={{ height: 250 }}>
+        <Alert severity="error">
+          Error al cargar datos de suscripciones: {error.message}
+        </Alert>
+      </Box>
+    );
+  }
+
+  // Si no hay datos
+  if (!chartData.length || (chartData[0].value === 0 && chartData[1].value === 0)) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 250 }}>
+        <Typography variant="body2" color="text.secondary">
+          No hay datos de suscripciones disponibles
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ height: 250, display: 'flex', flexDirection: 'column' }}>
@@ -115,9 +184,10 @@ export default function SubscriptionStatusChart() {
             verticalAlign="middle" 
             align="right"
             formatter={(value, entry, index) => {
+              if (!chartData[index]) return value;
               return (
                 <Box sx={{ color: COLORS[index % COLORS.length], fontWeight: 'bold' }}>
-                  {value} ({chartData[index]?.value})
+                  {value} ({chartData[index].value})
                 </Box>
               );
             }}

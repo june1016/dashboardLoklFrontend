@@ -1,13 +1,15 @@
-import { memo, useMemo } from 'react';
-import { Grid, Card, CardContent, Box, Typography, Avatar, useTheme } from '@mui/material';
+import { memo, useEffect, useState } from 'react';
+import { Grid, Card, CardContent, Box, Typography, Avatar, useTheme, CircularProgress, Alert } from '@mui/material';
 import {
   AttachMoney as MoneyIcon,
   People as PeopleIcon,
-  ShoppingCart as CartIcon,
-  BarChart as ChartIcon,
+  Warning as WarningIcon,
+  CalendarMonth as CalendarIcon,
   ArrowUpward as ArrowUpIcon,
   ArrowDownward as ArrowDownIcon
 } from '@mui/icons-material';
+import { dashboardService } from '../../api/api';
+import { useDataFetching } from '../../hooks/useDataFetching';
 
 interface StatCardProps {
   title: string;
@@ -20,52 +22,110 @@ interface StatCardProps {
   gradientTo: string;
 }
 
+interface DashboardStats {
+  totalIncome: number;
+  lastMonthIncome: number;
+  thisMonthIncome: number;
+  totalActiveSubscriptions: number;
+  newSubscriptions: number;
+  overdueRate: number;
+  overdueRateChange: number;
+  monthlyCollection: number;
+  monthlyCollectionChange: number;
+}
+
 function StatsCards() {
   const theme = useTheme();
+  const [stats, setStats] = useState<StatCardProps[]>([]);
 
-  // Usamos useMemo para evitar recrear el array en cada renderizado
-  const stats = useMemo<StatCardProps[]>(() => [
-    {
-      title: 'Ingresos Totales',
-      value: '$45.231.890',
-      change: '+20,1%',
-      trend: 'up',
-      icon: MoneyIcon,
-      color: theme.palette.primary.main,
-      gradientFrom: theme.palette.primary.main,
-      gradientTo: theme.palette.primary.light
+  // Usar el hook para obtener datos reales de la API
+  const { data, loading, error } = useDataFetching<DashboardStats>({
+    initialData: {
+      totalIncome: 0,
+      lastMonthIncome: 0,
+      thisMonthIncome: 0,
+      totalActiveSubscriptions: 0,
+      newSubscriptions: 0,
+      overdueRate: 0,
+      overdueRateChange: 0,
+      monthlyCollection: 0,
+      monthlyCollectionChange: 0
     },
-    {
-      title: 'Suscripciones',
-      value: '2.350',
-      change: '+12,5%',
-      trend: 'up',
-      icon: PeopleIcon,
-      color: theme.palette.info.main,
-      gradientFrom: theme.palette.info.main,
-      gradientTo: theme.palette.info.light
-    },
-    {
-      title: 'Ventas',
-      value: '12.234',
-      change: '+19,5%',
-      trend: 'up',
-      icon: CartIcon,
-      color: theme.palette.secondary.main,
-      gradientFrom: theme.palette.secondary.main,
-      gradientTo: theme.palette.secondary.light
-    },
-    {
-      title: 'Rendimiento',
-      value: '49,65%',
-      change: '-8,5%',
-      trend: 'down',
-      icon: ChartIcon,
-      color: theme.palette.error.main,
-      gradientFrom: theme.palette.error.main,
-      gradientTo: theme.palette.error.light
-    },
-  ], [theme.palette]);
+    fetchFn: dashboardService.getDashboardStats,
+    dependencies: []
+  });
+
+  // Procesar los datos de KPIs cuando se reciben
+  useEffect(() => {
+    if (data) {
+      // Formatear los números para mostrar
+      const formatCurrency = (value: number) => {
+        return new Intl.NumberFormat('es-CO', {
+          style: 'currency',
+          currency: 'COP',
+          maximumFractionDigits: 0
+        }).format(value);
+      };
+
+      const formatNumber = (value: number) => {
+        return new Intl.NumberFormat('es-CO').format(value);
+      };
+
+      const formatPercentage = (value: number) => {
+        return `${value.toFixed(2)}%`;
+      };
+
+      // Calcular cambio mensual de ingresos
+      const incomeChange = data.thisMonthIncome === 0 ? 0 : 
+        ((data.thisMonthIncome - data.lastMonthIncome) / data.lastMonthIncome) * 100;
+
+      // Construir array de stats con datos reales
+      const newStats: StatCardProps[] = [
+        {
+          title: 'Ingresos Totales',
+          value: formatCurrency(data.totalIncome),
+          change: `${incomeChange > 0 ? '+' : ''}${incomeChange.toFixed(1)}%`,
+          trend: incomeChange >= 0 ? 'up' : 'down',
+          icon: MoneyIcon,
+          color: theme.palette.primary.main,
+          gradientFrom: theme.palette.primary.main,
+          gradientTo: theme.palette.primary.light
+        },
+        {
+          title: 'Suscripciones Activas',
+          value: formatNumber(data.totalActiveSubscriptions),
+          change: `+${formatNumber(data.newSubscriptions)}`,
+          trend: 'up',
+          icon: PeopleIcon,
+          color: theme.palette.info.main,
+          gradientFrom: theme.palette.info.main,
+          gradientTo: theme.palette.info.light
+        },
+        {
+          title: 'Tasa de Morosidad',
+          value: formatPercentage(data.overdueRate),
+          change: `${data.overdueRateChange > 0 ? '+' : ''}${data.overdueRateChange.toFixed(1)}%`,
+          trend: data.overdueRateChange > 0 ? 'up' : 'down',
+          icon: WarningIcon,
+          color: theme.palette.warning.main,
+          gradientFrom: theme.palette.warning.main,
+          gradientTo: theme.palette.warning.light
+        },
+        {
+          title: 'Recaudación Mensual',
+          value: formatCurrency(data.monthlyCollection),
+          change: `${data.monthlyCollectionChange > 0 ? '+' : ''}${data.monthlyCollectionChange.toFixed(1)}%`,
+          trend: data.monthlyCollectionChange >= 0 ? 'up' : 'down',
+          icon: CalendarIcon,
+          color: data.monthlyCollectionChange >= 0 ? theme.palette.success.main : theme.palette.error.main,
+          gradientFrom: data.monthlyCollectionChange >= 0 ? theme.palette.success.main : theme.palette.error.main,
+          gradientTo: data.monthlyCollectionChange >= 0 ? theme.palette.success.light : theme.palette.error.light
+        },
+      ];
+
+      setStats(newStats);
+    }
+  }, [data, theme.palette]);
 
   // Componente de tarjeta memoizado para evitar renderizados innecesarios
   const StatCard = memo(({ stat }: { stat: StatCardProps }) => (
@@ -126,14 +186,22 @@ function StatsCards() {
         
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {stat.trend === 'up' ? (
-            <ArrowUpIcon fontSize="small" sx={{ color: theme.palette.success.main, mr: 0.5 }} />
+            <ArrowUpIcon fontSize="small" sx={{ color: 
+              stat.title === 'Tasa de Morosidad' ? theme.palette.error.main : theme.palette.success.main, 
+              mr: 0.5 
+            }} />
           ) : (
-            <ArrowDownIcon fontSize="small" sx={{ color: theme.palette.error.main, mr: 0.5 }} />
+            <ArrowDownIcon fontSize="small" sx={{ color: 
+              stat.title === 'Tasa de Morosidad' ? theme.palette.success.main : theme.palette.error.main, 
+              mr: 0.5 
+            }} />
           )}
           <Typography 
             variant="body2" 
             sx={{ 
-              color: stat.trend === 'up' ? theme.palette.success.main : theme.palette.error.main,
+              color: stat.title === 'Tasa de Morosidad' 
+                ? (stat.trend === 'up' ? theme.palette.error.main : theme.palette.success.main)
+                : (stat.trend === 'up' ? theme.palette.success.main : theme.palette.error.main),
               fontWeight: 'medium',
               mr: 0.5
             }}
@@ -149,12 +217,30 @@ function StatsCards() {
               textOverflow: 'ellipsis' // Muestra "..." si el texto es demasiado largo
             }}
           >
-            desde el mes pasado
+            {stat.title === 'Suscripciones Activas' ? 'nuevas este mes' : 'desde el mes pasado'}
           </Typography>
         </Box>
       </CardContent>
     </Card>
   ));
+
+  // Mostrar estado de carga
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Mostrar error si ocurre
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ mb: 3 }}>
+        Error al cargar estadísticas: {error.message}
+      </Alert>
+    );
+  }
 
   return (
     <Grid container spacing={3}>

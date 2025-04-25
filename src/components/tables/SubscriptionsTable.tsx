@@ -1,4 +1,4 @@
-import { useState, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import {
   Table,
   TableBody,
@@ -21,7 +21,9 @@ import {
   Grid,
   Divider,
   useTheme,
-  SelectChangeEvent
+  SelectChangeEvent,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
@@ -29,6 +31,8 @@ import {
   LocalOffer as LocalOfferIcon,
   CalendarToday as CalendarTodayIcon
 } from '@mui/icons-material';
+import { dashboardService } from '../../api/api';
+import { useDataFetching } from '../../hooks/useDataFetching';
 
 // Tipos para las suscripciones
 interface Installment {
@@ -40,7 +44,7 @@ interface Installment {
 }
 
 interface Subscription {
-  id: number;
+  id: string;
   status: 'active' | 'completed' | 'ending_soon' | 'canceled';
   project: string;
   investment: number;
@@ -273,7 +277,16 @@ const Row = memo(function Row({ row }: RowProps) {
   );
 });
 
-// Interfaz para los filtros
+// Interfaz para los filtros enviados a la API
+interface ApiFilters {
+  email?: string;
+  status?: string;
+  project?: string;
+  overdueMin?: number;
+  overdueMax?: number;
+}
+
+// Interfaz para los filtros del componente
 interface FilterState {
   email: string;
   status: string;
@@ -282,7 +295,8 @@ interface FilterState {
 }
 
 function SubscriptionsTable() {
-  // const theme = useTheme(); 
+  const theme = useTheme();
+  
   // Estado para paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -294,115 +308,47 @@ function SubscriptionsTable() {
     project: '',
     overdueRange: ''
   });
+  
+  // Estado para los filtros procesados que se envían a la API
+  const [apiFilters, setApiFilters] = useState<ApiFilters>({});
 
-  // Datos de ejemplo para la tabla
-  const rows: Subscription[] = [
-    {
-      id: 1,
-      status: 'active',
-      project: 'Green Tower',
-      investment: 15000000,
-      units: 5,
-      startDate: '2024-01-15',
-      endDate: '2025-01-15',
-      totalInstallments: 12,
-      overdue: 0,
-      totalPaid: 5000000,
-      totalRemaining: 10000000,
-      email: 'usuario1@example.com',
-      installments: [
-        { id: 1, dueDate: '2024-02-15', amount: 1250000, status: 'paid', paymentDate: '2024-02-10' },
-        { id: 2, dueDate: '2024-03-15', amount: 1250000, status: 'paid', paymentDate: '2024-03-12' },
-        { id: 3, dueDate: '2024-04-15', amount: 1250000, status: 'paid', paymentDate: '2024-04-13' },
-        { id: 4, dueDate: '2024-05-15', amount: 1250000, status: 'paid', paymentDate: '2024-05-10' },
-        { id: 5, dueDate: '2024-06-15', amount: 1250000, status: 'pending' }
-      ]
-    },
-    {
-      id: 2,
-      status: 'ending_soon',
-      project: 'Blue Ocean',
-      investment: 24000000,
-      units: 8,
-      startDate: '2023-10-01',
-      endDate: '2024-07-01',
-      totalInstallments: 10,
-      overdue: 0,
-      totalPaid: 21600000,
-      totalRemaining: 2400000,
-      email: 'usuario2@example.com',
-      installments: [
-        { id: 1, dueDate: '2023-11-01', amount: 2400000, status: 'paid', paymentDate: '2023-10-28' },
-        { id: 2, dueDate: '2023-12-01', amount: 2400000, status: 'paid', paymentDate: '2023-11-29' },
-        { id: 3, dueDate: '2024-01-01', amount: 2400000, status: 'paid', paymentDate: '2023-12-30' },
-        { id: 4, dueDate: '2024-02-01', amount: 2400000, status: 'paid', paymentDate: '2024-01-28' },
-        { id: 5, dueDate: '2024-03-01', amount: 2400000, status: 'paid', paymentDate: '2024-02-27' },
-        { id: 6, dueDate: '2024-04-01', amount: 2400000, status: 'paid', paymentDate: '2024-03-28' },
-        { id: 7, dueDate: '2024-05-01', amount: 2400000, status: 'paid', paymentDate: '2024-04-27' },
-        { id: 8, dueDate: '2024-06-01', amount: 2400000, status: 'paid', paymentDate: '2024-05-28' },
-        { id: 9, dueDate: '2024-07-01', amount: 2400000, status: 'paid', paymentDate: '2024-06-27' },
-        { id: 10, dueDate: '2024-08-01', amount: 2400000, status: 'pending' }
-      ]
-    },
-    {
-      id: 3,
-      status: 'active',
-      project: 'Sunset Hills',
-      investment: 30000000,
-      units: 10,
-      startDate: '2024-03-01',
-      endDate: '2025-03-01',
-      totalInstallments: 12,
-      overdue: 1500000,
-      totalPaid: 4500000,
-      totalRemaining: 25500000,
-      email: 'usuario3@example.com',
-      installments: [
-        { id: 1, dueDate: '2024-04-01', amount: 2500000, status: 'paid', paymentDate: '2024-03-28' },
-        { id: 2, dueDate: '2024-05-01', amount: 2500000, status: 'paid', paymentDate: '2024-04-29' },
-        { id: 3, dueDate: '2024-06-01', amount: 2500000, status: 'overdue' }
-      ]
-    },
-    {
-      id: 4,
-      status: 'completed',
-      project: 'Mountain View',
-      investment: 18000000,
-      units: 6,
-      startDate: '2023-06-01',
-      endDate: '2024-03-01',
-      totalInstallments: 10,
-      overdue: 0,
-      totalPaid: 18000000,
-      totalRemaining: 0,
-      email: 'usuario4@example.com',
-      installments: [
-        { id: 1, dueDate: '2023-07-01', amount: 1800000, status: 'paid', paymentDate: '2023-06-28' },
-        { id: 2, dueDate: '2023-08-01', amount: 1800000, status: 'paid', paymentDate: '2023-07-30' },
-        { id: 3, dueDate: '2023-09-01', amount: 1800000, status: 'paid', paymentDate: '2023-08-28' },
-        { id: 4, dueDate: '2023-10-01', amount: 1800000, status: 'paid', paymentDate: '2023-09-29' },
-        { id: 5, dueDate: '2023-11-01', amount: 1800000, status: 'paid', paymentDate: '2023-10-28' },
-        { id: 6, dueDate: '2023-12-01', amount: 1800000, status: 'paid', paymentDate: '2023-11-27' },
-        { id: 7, dueDate: '2024-01-01', amount: 1800000, status: 'paid', paymentDate: '2023-12-28' },
-        { id: 8, dueDate: '2024-02-01', amount: 1800000, status: 'paid', paymentDate: '2024-01-29' },
-        { id: 9, dueDate: '2024-03-01', amount: 1800000, status: 'paid', paymentDate: '2024-02-26' },
-        { id: 10, dueDate: '2024-04-01', amount: 1800000, status: 'paid', paymentDate: '2024-03-28' }
-      ]
+  // Procesar los filtros para la API
+  useEffect(() => {
+    const newFilters: ApiFilters = {};
+    
+    if (filters.email) newFilters.email = filters.email;
+    if (filters.status) newFilters.status = filters.status;
+    if (filters.project) newFilters.project = filters.project;
+    
+    // Procesar rango de mora
+    if (filters.overdueRange) {
+      switch (filters.overdueRange) {
+        case '0':
+          newFilters.overdueMin = 0;
+          newFilters.overdueMax = 0;
+          break;
+        case '1-500000':
+          newFilters.overdueMin = 1;
+          newFilters.overdueMax = 500000;
+          break;
+        case '500001-1000000':
+          newFilters.overdueMin = 500001;
+          newFilters.overdueMax = 1000000;
+          break;
+        case '1000001+':
+          newFilters.overdueMin = 1000001;
+          break;
+      }
     }
-  ];
+    
+    setApiFilters(newFilters);
+  }, [filters]);
 
-  // Filtrar filas según los filtros aplicados - memoizado para mejor rendimiento
-  const filteredRows = rows.filter((row) => {
-    return (
-      (filters.email === '' || row.email.toLowerCase().includes(filters.email.toLowerCase())) &&
-      (filters.status === '' || row.status === filters.status) &&
-      (filters.project === '' || row.project.toLowerCase().includes(filters.project.toLowerCase())) &&
-      (filters.overdueRange === '' || 
-        (filters.overdueRange === '0' && row.overdue === 0) ||
-        (filters.overdueRange === '1-500000' && row.overdue > 0 && row.overdue <= 500000) ||
-        (filters.overdueRange === '500001-1000000' && row.overdue > 500000 && row.overdue <= 1000000) ||
-        (filters.overdueRange === '1000001+' && row.overdue > 1000000))
-    );
+  // Usar el hook para obtener datos reales de la API
+  const { data, loading, error } = useDataFetching<Subscription[]>({
+    initialData: [],
+    fetchFn: () => dashboardService.getSubscriptions(apiFilters),
+    dependencies: [apiFilters]
   });
 
   // Manejar cambio de página - useCallback para evitar recreación en cada renderizado
@@ -506,47 +452,66 @@ function SubscriptionsTable() {
 
       {/* Tabla */}
       <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer sx={{ maxHeight: 600 }}>
-          <Table stickyHeader aria-label="tabla de suscripciones">
-            <TableHead>
-              <TableRow>
-                <TableCell />
-                <TableCell>Estado</TableCell>
-                <TableCell>Proyecto</TableCell>
-                <TableCell align="right">Inversión</TableCell>
-                <TableCell align="center">Unidades</TableCell>
-                <TableCell>Fechas</TableCell>
-                <TableCell align="center">Cuotas</TableCell>
-                <TableCell align="right">Mora</TableCell>
-                <TableCell align="right">Total Pagado</TableCell>
-                <TableCell align="right">Por Pagar</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {(rowsPerPage > 0
-                ? filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                : filteredRows
-              ).map((row) => (
-                // Aquí estaba el error, necesitamos asegurarnos de que la prop 'row' tenga el tipo correcto
-                <Row 
-                  key={`subscription-row-${row.id}`} 
-                  row={row} 
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={filteredRows.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Filas por página:"
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-        />
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Box sx={{ p: 3 }}>
+            <Alert severity="error">
+              Error al cargar los datos: {error.message}
+            </Alert>
+          </Box>
+        ) : data.length === 0 ? (
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="body1" color="text.secondary">
+              No se encontraron suscripciones con los filtros seleccionados
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            <TableContainer sx={{ maxHeight: 600 }}>
+              <Table stickyHeader aria-label="tabla de suscripciones">
+                <TableHead>
+                  <TableRow>
+                    <TableCell />
+                    <TableCell>Estado</TableCell>
+                    <TableCell>Proyecto</TableCell>
+                    <TableCell align="right">Inversión</TableCell>
+                    <TableCell align="center">Unidades</TableCell>
+                    <TableCell>Fechas</TableCell>
+                    <TableCell align="center">Cuotas</TableCell>
+                    <TableCell align="right">Mora</TableCell>
+                    <TableCell align="right">Total Pagado</TableCell>
+                    <TableCell align="right">Por Pagar</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {(rowsPerPage > 0
+                    ? data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    : data
+                  ).map((row) => (
+                    <Row 
+                      key={`subscription-row-${row.id}`} 
+                      row={row} 
+                    />
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={data.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              labelRowsPerPage="Filas por página:"
+              labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+            />
+          </>
+        )}
       </Paper>
     </Box>
   );

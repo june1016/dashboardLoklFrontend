@@ -1,5 +1,6 @@
 // src/hooks/useDataFetching.ts
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 interface DataFetchingOptions<T> {
   initialData: T;
@@ -29,7 +30,15 @@ export function useDataFetching<T>({
         }
       } catch (err) {
         if (isMounted) {
-          setError(err instanceof Error ? err : new Error('Error desconocido'));
+          console.error('Error en useDataFetching:', err);
+          
+          if (axios.isAxiosError(err)) {
+            // Para errores de Axios, proporcionar más detalles
+            const errorMessage = err.response?.data?.error || err.message;
+            setError(new Error(`Error de API: ${errorMessage}`));
+          } else {
+            setError(err instanceof Error ? err : new Error('Error desconocido'));
+          }
         }
       } finally {
         if (isMounted) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, useTheme } from '@mui/material';
+import { Box, useTheme, CircularProgress, Alert, Typography } from '@mui/material';
 import {
   BarChart,
   Bar,
@@ -11,6 +11,8 @@ import {
   ResponsiveContainer,
   LabelList
 } from 'recharts';
+import { dashboardService } from '../../api/api';
+import { useDataFetching } from '../../hooks/useDataFetching';
 
 interface ProjectOverdue {
   name: string;
@@ -22,20 +24,21 @@ export default function OverdueByProject() {
   const theme = useTheme();
   const [chartData, setChartData] = useState<ProjectOverdue[]>([]);
 
+  // Usar el hook para obtener datos reales de la API
+  const { data, loading, error } = useDataFetching<ProjectOverdue[]>({
+    initialData: [],
+    fetchFn: dashboardService.getOverdueByProject,
+    dependencies: []
+  });
+
+  // Procesar datos cuando cambian
   useEffect(() => {
-    // Datos de ejemplo (se reemplazarán con datos reales de la API)
-    const data: ProjectOverdue[] = [
-      { name: 'Green Tower', amount: 1200000, percentage: 12 },
-      { name: 'Blue Ocean', amount: 3500000, percentage: 35 },
-      { name: 'Sunset Hills', amount: 2800000, percentage: 28 },
-      { name: 'Mountain View', amount: 900000, percentage: 9 },
-      { name: 'City Lofts', amount: 1600000, percentage: 16 }
-    ];
-    
-    // Ordenar de mayor a menor
-    const sortedData = [...data].sort((a, b) => b.amount - a.amount);
-    setChartData(sortedData);
-  }, []);
+    if (data && data.length > 0) {
+      // Los datos ya vienen ordenados del backend, pero por si acaso
+      const sortedData = [...data].sort((a, b) => b.amount - a.amount);
+      setChartData(sortedData);
+    }
+  }, [data]);
 
   // Función para formatear montos en el tooltip
   const formatCurrency = (value: number) => {
@@ -77,6 +80,40 @@ export default function OverdueByProject() {
     }
     return null;
   };
+
+  // Mostrar estado de carga
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 350 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Mostrar error si ocurre
+  if (error) {
+    return (
+      <Box sx={{ height: 350, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error al cargar datos de mora por proyecto: {error.message}
+        </Alert>
+        <Typography variant="body2" color="text.secondary" textAlign="center">
+          Intenta recargar la página. Si el problema persiste, contacta al administrador.
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Si no hay datos
+  if (!chartData || chartData.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 350 }}>
+        <Typography variant="body2" color="text.secondary">
+          No hay datos de mora por proyecto disponibles
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: '100%', height: 350 }}>

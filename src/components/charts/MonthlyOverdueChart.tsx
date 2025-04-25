@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, ToggleButton, ToggleButtonGroup, CircularProgress, Alert, Typography } from '@mui/material';
 import { useMobile } from '../../hooks/useMobile';
 import {
   AreaChart,
@@ -14,6 +14,8 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
+import { dashboardService } from '../../api/api';
+import { useDataFetching } from '../../hooks/useDataFetching';
 
 interface MonthlyOverdue {
   name: string;
@@ -26,28 +28,24 @@ export default function MonthlyOverdueChart() {
   const isMobile = useMobile();
   const [chartData, setChartData] = useState<MonthlyOverdue[]>([]);
   const [chartType, setChartType] = useState<'monthly' | 'accumulated'>('monthly');
+  
+  // Obtener el año actual para usarlo como parámetro por defecto
+  const currentYear = new Date().getFullYear();
 
+  // Usar el hook para obtener datos reales de la API
+  const { data, loading, error } = useDataFetching<MonthlyOverdue[]>({
+    initialData: [],
+    fetchFn: () => dashboardService.getMonthlyOverdue(currentYear),
+    dependencies: [currentYear]
+  });
+
+  // Procesar datos cuando cambian
   useEffect(() => {
-    // Datos de ejemplo (estos se reemplazarán con datos reales de la API)
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    
-    // Valores mensuales
-    const monthlyValues = [800000, 1200000, 950000, 1100000, 1500000, 1300000, 1600000, 1800000, 1400000, 1700000, 1900000, 2200000];
-    
-    // Calcular acumulado
-    let accumulated = 0;
-    const data = months.map((month, index) => {
-      const monthly = monthlyValues[index];
-      accumulated += monthly;
-      return {
-        name: month,
-        monthly,
-        accumulated
-      };
-    });
-
-    setChartData(isMobile ? data.filter((_, i) => i % 2 === 0) : data);
-  }, [isMobile]);
+    if (data && data.length > 0) {
+      // Si estamos en móvil, mostrar menos datos
+      setChartData(isMobile ? data.filter((_, i) => i % 2 === 0) : data);
+    }
+  }, [data, isMobile]);
 
   // Formateo de moneda para tooltip y ejes
   const formatCurrency = (value: number) => {
@@ -67,6 +65,40 @@ export default function MonthlyOverdueChart() {
       setChartType(newType);
     }
   };
+
+  // Mostrar estado de carga
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Mostrar error si ocurre
+  if (error) {
+    return (
+      <Box sx={{ height: 400, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error al cargar datos de mora: {error.message}
+        </Alert>
+        <Typography variant="body2" color="text.secondary" textAlign="center">
+          Intenta recargar la página. Si el problema persiste, contacta al administrador.
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Si no hay datos
+  if (!chartData || chartData.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+        <Typography variant="body2" color="text.secondary">
+          No hay datos de mora disponibles para mostrar
+        </Typography>
+      </Box>
+    );
+  }
 
   // Renderizar el gráfico apropiado según la selección
   const renderChart = () => {
