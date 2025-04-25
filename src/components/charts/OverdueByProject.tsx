@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Box, useTheme, CircularProgress, Alert, Typography } from '@mui/material';
+import { 
+  Box, 
+  useTheme, 
+  CircularProgress, 
+  Alert, 
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent
+} from '@mui/material';
 import {
   BarChart,
   Bar,
@@ -24,11 +35,21 @@ export default function OverdueByProject() {
   const theme = useTheme();
   const [chartData, setChartData] = useState<ProjectOverdue[]>([]);
 
+  // Obtener el año actual para usarlo como parámetro por defecto
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
+  // Generar años disponibles (2023 hasta año actual)
+  const availableYears = [];
+  for (let year = 2023; year <= currentYear; year++) {
+    availableYears.push(year);
+  }
+
   // Usar el hook para obtener datos reales de la API
   const { data, loading, error } = useDataFetching<ProjectOverdue[]>({
     initialData: [],
-    fetchFn: dashboardService.getOverdueByProject,
-    dependencies: []
+    fetchFn: () => dashboardService.getOverdueByProject(selectedYear),
+    dependencies: [selectedYear]
   });
 
   // Procesar datos cuando cambian
@@ -37,6 +58,8 @@ export default function OverdueByProject() {
       // Los datos ya vienen ordenados del backend, pero por si acaso
       const sortedData = [...data].sort((a, b) => b.amount - a.amount);
       setChartData(sortedData);
+    } else {
+      setChartData([]);
     }
   }, [data]);
 
@@ -47,6 +70,11 @@ export default function OverdueByProject() {
       currency: 'COP',
       minimumFractionDigits: 0
     }).format(value);
+  };
+
+  // Manejador para cambio de año
+  const handleYearChange = (event: SelectChangeEvent<number>) => {
+    setSelectedYear(Number(event.target.value));
   };
 
   // Componente personalizado para el tooltip
@@ -107,9 +135,24 @@ export default function OverdueByProject() {
   // Si no hay datos
   if (!chartData || chartData.length === 0) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 350 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, justifyContent: 'center', alignItems: 'center', height: 350 }}>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel id="project-overdue-year-select-label">Año</InputLabel>
+          <Select
+            labelId="project-overdue-year-select-label"
+            value={selectedYear}
+            label="Año"
+            onChange={handleYearChange}
+          >
+            {availableYears.map(year => (
+              <MenuItem key={year} value={year}>
+                {year}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <Typography variant="body2" color="text.secondary">
-          No hay datos de mora por proyecto disponibles
+          No hay datos de mora por proyecto disponibles para {selectedYear}
         </Typography>
       </Box>
     );
@@ -117,6 +160,23 @@ export default function OverdueByProject() {
 
   return (
     <Box sx={{ width: '100%', height: 350 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 2 }}>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel id="project-overdue-year-select-label">Año</InputLabel>
+          <Select
+            labelId="project-overdue-year-select-label"
+            value={selectedYear}
+            label="Año"
+            onChange={handleYearChange}
+          >
+            {availableYears.map(year => (
+              <MenuItem key={year} value={year}>
+                {year}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={chartData}

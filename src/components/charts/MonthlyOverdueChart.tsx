@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box, ToggleButton, ToggleButtonGroup, CircularProgress, Alert, Typography } from '@mui/material';
+import { 
+  Box, 
+  ToggleButton, 
+  ToggleButtonGroup, 
+  CircularProgress, 
+  Alert, 
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent
+} from '@mui/material';
 import { useMobile } from '../../hooks/useMobile';
 import {
   AreaChart,
@@ -31,12 +43,19 @@ export default function MonthlyOverdueChart() {
   
   // Obtener el año actual para usarlo como parámetro por defecto
   const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
+  // Generar años disponibles (2023 hasta año actual)
+  const availableYears = [];
+  for (let year = 2023; year <= currentYear; year++) {
+    availableYears.push(year);
+  }
 
   // Usar el hook para obtener datos reales de la API
   const { data, loading, error } = useDataFetching<MonthlyOverdue[]>({
     initialData: [],
-    fetchFn: () => dashboardService.getMonthlyOverdue(currentYear),
-    dependencies: [currentYear]
+    fetchFn: () => dashboardService.getMonthlyOverdue(selectedYear),
+    dependencies: [selectedYear] // Volver a ejecutar cuando cambie el año
   });
 
   // Procesar datos cuando cambian
@@ -64,6 +83,11 @@ export default function MonthlyOverdueChart() {
     if (newType !== null) {
       setChartType(newType);
     }
+  };
+
+  // Añadir manejador para el cambio de año
+  const handleYearChange = (event: SelectChangeEvent<number>) => {
+    setSelectedYear(Number(event.target.value));
   };
 
   // Mostrar estado de carga
@@ -94,7 +118,7 @@ export default function MonthlyOverdueChart() {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
         <Typography variant="body2" color="text.secondary">
-          No hay datos de mora disponibles para mostrar
+          No hay datos de mora disponibles para mostrar en {selectedYear}
         </Typography>
       </Box>
     );
@@ -195,7 +219,22 @@ export default function MonthlyOverdueChart() {
 
   return (
     <Box sx={{ width: '100%', height: 400 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel id="monthly-overdue-year-select-label">Año</InputLabel>
+          <Select
+            labelId="monthly-overdue-year-select-label"
+            value={selectedYear}
+            label="Año"
+            onChange={handleYearChange}
+          >
+            {availableYears.map(year => (
+              <MenuItem key={year} value={year}>
+                {year}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <ToggleButtonGroup
           value={chartType}
           exclusive

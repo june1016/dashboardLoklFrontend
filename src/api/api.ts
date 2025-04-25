@@ -68,16 +68,18 @@ getDashboardStats: async () => {
     }
   },
 
-  // Mora por proyecto
-  getOverdueByProject: async () => {
-    try {
-      const response = await api.get('/analytics/overdue-by-project');
-      return response.data;
-    } catch (error) {
-      console.error('Error en getOverdueByProject:', error);
-      throw error;
-    }
-  },
+// Mora por proyecto
+getOverdueByProject: async (year?: number) => {
+  try {
+    const response = await api.get('/analytics/overdue-by-project', {
+      params: year ? { year } : undefined,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error en getOverdueByProject:', error);
+    throw error;
+  }
+},
 
   // Tabla de suscripciones con filtros
   getSubscriptions: async (filters?: any) => {
