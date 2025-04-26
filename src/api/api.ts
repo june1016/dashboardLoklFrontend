@@ -12,6 +12,7 @@ const api = axios.create({
 });
 
 // Interfaz para las respuestas de la API
+// @ts-ignore
 interface ApiResponse<T> {
   success: boolean;
   message?: string;

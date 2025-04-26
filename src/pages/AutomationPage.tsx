@@ -139,11 +139,17 @@ export default function AutomationPage() {
     try {
       const response = await automationService.generateReport(reportFormat);
       
-      if (response.success) {
+      if (response.success && response.data) {
         setTaskResult({
           type: 'success',
           message: `Reporte generado exitosamente en formato ${reportFormat.toUpperCase()}`
         });
+        
+        // Abrir el archivo automáticamente si hay una URL
+        if (response.data.fileUrl) {
+          window.open(response.data.fileUrl, '_blank');
+        }
+        
         // Actualizar historial después de una ejecución exitosa
         fetchExecutionHistory();
       } else {

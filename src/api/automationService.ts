@@ -27,6 +27,11 @@ interface EmailResult {
   }>;
 }
 
+interface ReportResult {
+  filePath: string;
+  fileUrl?: string; // URL para acceder al archivo
+}
+
 // Interfaz para el historial de ejecuciones
 export interface ExecutionRecord {
   id: number;
@@ -39,7 +44,7 @@ export interface ExecutionRecord {
 // Servicios de automatización
 const automationService = {
   // Generar reporte de mora
-  generateReport: async (format = 'excel'): Promise<ApiResponse<{filePath: string}>> => {
+  generateReport: async (format = 'excel'): Promise<ApiResponse<ReportResult>> => {
     try {
       const response = await api.get('/automations/generate-report', { 
         params: { format } 
