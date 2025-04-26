@@ -6,6 +6,7 @@ import { insightsService, CustomerSegmentationResponse } from '../api/insightsSe
 import CustomerSegmentationChart from '../components/insights/CustomerSegmentationChart';
 
 export default function AnalyticsPage() {
+  //@ts-ignore
   const theme = useTheme();
   // Usar periodo fijo (último año)
   const period = 'year';

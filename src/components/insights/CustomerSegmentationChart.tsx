@@ -96,7 +96,7 @@ export default function CustomerSegmentationChart({
   }));
 
   // Manejar cambio de pestaña
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 

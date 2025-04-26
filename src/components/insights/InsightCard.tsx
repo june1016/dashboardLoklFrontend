@@ -1,4 +1,5 @@
 // src/components/insights/InsightCard.tsx
+//@ts-ignore
 import React from 'react';
 import { Card, CardContent, Typography, Box, Chip, Button, Divider } from '@mui/material';
 import { Warning as WarningIcon, Info as InfoIcon, PriorityHigh as HighPriorityIcon } from '@mui/icons-material';

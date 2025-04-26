@@ -113,7 +113,7 @@ export default function SubscriptionChart() {
             dataKey="value"
             label={renderCustomizedLabel}
           >
-            {chartData.map((entry, index) => (
+            {chartData.map((_, index) => (
               <Cell 
                 key={`cell-${index}`} 
                 fill={COLORS[index % COLORS.length]} 

@@ -174,7 +174,7 @@ export default function SubscriptionStatusChart() {
             fill="#8884d8"
             dataKey="value"
           >
-            {chartData.map((entry, index) => (
+            {chartData.map((_, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
@@ -183,7 +183,7 @@ export default function SubscriptionStatusChart() {
             layout="vertical" 
             verticalAlign="middle" 
             align="right"
-            formatter={(value, entry, index) => {
+            formatter={(value, _, index) => {
               if (!chartData[index]) return value;
               return (
                 <Box sx={{ color: COLORS[index % COLORS.length], fontWeight: 'bold' }}>

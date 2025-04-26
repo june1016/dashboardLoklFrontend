@@ -295,6 +295,7 @@ interface FilterState {
 }
 
 function SubscriptionsTable() {
+  //@ts-ignore
   const theme = useTheme();
   
   // Estado para paginación
