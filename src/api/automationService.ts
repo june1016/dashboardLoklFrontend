@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Definimos la URL base del API
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'dashboardloklbackend-production.up.railway.app/api';
 
 // Configuración básica para axios
 const api = axios.create({
