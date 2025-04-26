@@ -150,7 +150,7 @@ function DashboardSidebar({ collapsed, onToggleCollapse }: DashboardSidebarProps
         >
           {!collapsed && (
             <img 
-              src="/src/assets/Logo.png" 
+            src="/Logo.png" 
               alt="LOKL Logo" 
               style={{ 
                 height: 40, 
